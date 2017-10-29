@@ -1,8 +1,10 @@
 #!/bin/bash
+git pull
+
 for content_img in ./images/content_images/*.jpg; do
   for style_img in ./images/style_images/*.jpg; do
     echo "Transfering ${style_img##*/} to ${content_img##*/}"
-    # python3 Gatys_implementation.py ${content_img##*/} ${style_img##*/}
+    python3 Gatys_implementation.py ${content_img##*/} ${style_img##*/}
   done
 done
 
