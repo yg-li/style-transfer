@@ -1,5 +1,7 @@
 import os
 import argparse
+import copy
+import logging
 
 import torch
 from torch.autograd import Variable
@@ -13,9 +15,6 @@ import torchvision.utils as utils
 import matplotlib.pyplot as plt
 from PIL import Image
 
-import copy
-import logging
-
 # layers we used to represent content
 CONTENT_LAYERS = ['conv4_2']
 # layers we used to represent style
@@ -24,6 +23,8 @@ STYLE_LAYERS = ['conv1_1', 'conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']
 CONTENT_WEIGHT = 1
 # how important is the style of style image and that of the generated image being similar
 STYLE_WEIGHT = 1000
+
+NUM_STEPS = 300
 
 # run on GPU
 use_cuda = torch.cuda.is_available()
@@ -171,17 +172,18 @@ def get_style_model_and_losses(vgg, content_img, style_img):
 
   return model, content_losses, style_losses
 
-def get_input_param_and_optimizer(input_img):
+def get_input_param_and_optimizer(input_img, max_iter=300):
   """ produce the input parameter (the generated image) and the optimizer
   Args:
     input_img: the initial generated image
+    max_iter: the maximum number of iterations
   Returns:
     input_param: a parameter has the data of input_img
     optimizer: an L-BFGS optimizer
   """
   # input_img is a parameter that needs to be updated
   input_param = nn.Parameter(input_img.data)
-  optimizer = optim.LBFGS([input_param], max_iter=1)
+  optimizer = optim.LBFGS([input_param], max_iter=max_iter)
   return input_param, optimizer
 
 def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_steps=300):
@@ -196,42 +198,42 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
   """
   print('Building the style transfer model...')
   model, content_losses, style_losses = get_style_model_and_losses(vgg, content_img, style_img)
-  input_param, optimizer = get_input_param_and_optimizer(input_img)
+  input_param, optimizer = get_input_param_and_optimizer(input_img, num_steps)
 
   print('Transfering style..')
-  run = [0]
-  while run[0] <= num_steps:
+  run = [NUM_STEPS-num_steps]
+  def closure():
+    # Normalised the value of input_img to be in [0,1]
+    input_param.data.clamp_(0, 1)
 
-    def closure():
-      # Normalised the value of input_img to be in [0,1]
-      input_param.data.clamp_(0, 1)
+    utils.save_image(input_param.data, output_dir + str(run[0]) + '.jpg')
 
-      utils.save_image(input_param.data, output_dir + str(run[0]) + '.jpg')
+    optimizer.zero_grad()
+    model(input_param)
+    style_score = 0
+    content_score = 0
 
-      optimizer.zero_grad()
-      model(input_param)
-      style_score = 0
-      content_score = 0
+    for cl in content_losses:
+      content_score += cl.backward()
+    for sl in style_losses:
+      style_score += sl.backward()
 
-      for cl in content_losses:
-        content_score += cl.backward()
-      for sl in style_losses:
-        style_score += sl.backward()
+    # if run[0] % 10 == 0:
+    logging.info("run {}:".format(run))
+    logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
+      style_score.data[0], content_score.data[0]))
+    run[0] += 1
 
-      # if run[0] % 10 == 0:
-      logging.info("run {}:".format(run))
-      logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
-        style_score.data[0], content_score.data[0]))
-      run[0] += 1
+    return content_score + style_score
 
-      return content_score + style_score
-
-    optimizer.step(closure)
+  optimizer.step(closure)
 
   input_param.data.clamp_(0, 1)
   return input_param.data
 
 def main(args):
+  num_steps = NUM_STEPS
+
   # set content and style weights
   if args.style_to_content is not None:
     STYLE_WEIGHT = CONTENT_WEIGHT * args.style_to_content
@@ -243,7 +245,7 @@ def main(args):
   assert content_img.size() == style_img.size(), 'the content and style images should have the same size'
 
   # start transferring from content image
-  input_img = content_img.clone() # Variable(torch.rand(content_img.size())).type(dtype)
+  input_img = content_img.clone()  # Variable(torch.rand(content_img.size())).type(dtype)
 
   vgg = models.vgg19(pretrained=True).features
   if use_cuda:
@@ -254,16 +256,29 @@ def main(args):
                args.content_image.split('.')[0] + '_' + args.style_image.split('.')[0] + '/'
   if not os.path.exists(output_dir):
     os.mkdir(output_dir)
+  elif 'result.jpg' in os.listdir(output_dir):
+    print('Already transferred')
+    return
+  else: # start transferring from an intermediate stage
+    files = os.listdir(output_dir)
+    for i in reversed(range(num_steps)):
+      if str(i)+'.jpg' in files:
+        try:
+          input_img = image_loader(output_dir+str(i)+'.jpg', img_height, img_width).type(dtype)
+          num_steps -= i
+          print('Starting transferring from the', str(i), 'iteration')
+          break
+        except IOError:
+          continue
 
   # start logging
   logging.basicConfig(filename=output_dir + 'log', level=logging.DEBUG)
 
   # transfer style
-  output_img = run_style_transfer(vgg, content_img, style_img, input_img, output_dir)
+  output_img = run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_steps)
   utils.save_image(output_img, output_dir + 'result.jpg')
 
   logging.info("Transferring finished")
-  logging.info('')
 
   """ display the images for checking """
   # plt.figure()
