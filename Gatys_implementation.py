@@ -1,0 +1,284 @@
+import os
+import argparse
+
+import torch
+from torch.autograd import Variable
+import torch.nn as nn
+import torch.optim as optim
+
+import torchvision.transforms as transforms
+import torchvision.models as models
+import torchvision.utils as utils
+
+import matplotlib.pyplot as plt
+from PIL import Image
+
+import copy
+import logging
+
+# layers we used to represent content
+CONTENT_LAYERS = ['conv4_2']
+# layers we used to represent style
+STYLE_LAYERS = ['conv1_1', 'conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']
+# how important is the content of content image and that of the generated image being similar
+CONTENT_WEIGHT = 1
+# how important is the style of style image and that of the generated image being similar
+STYLE_WEIGHT = 1000
+
+# run on GPU
+use_cuda = torch.cuda.is_available()
+dtype = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
+
+# helpers
+toTensor = transforms.ToTensor()
+unloader = transforms.ToPILImage()
+
+def image_loader(image_name, height=None, width=None):
+  """ helper for loading images
+  Args:
+    image_name: the path to the image
+    height, width: the height and width the loaded image needed to be resized to
+  Returns:
+    image: the Variable representing the image loaded (value in [0,1])
+  """
+  image = Image.open(image_name)
+  if height is None or width is None:
+    image = Variable(toTensor(image))
+  else:
+    image = Variable(toTensor(image.resize((width, height))))
+  image = image.unsqueeze(0) # make the tensor to be 4D so that VGG can process it
+  return image
+
+def imshow(tensor, title=None):
+  """ helper for displaying image
+  Args:
+    tensor: the tensor representing the image we want to display
+    title: the title of the image
+  Returns:
+    None
+  """
+  image = tensor.clone().cpu()  # we clone the tensor to not do changes on it
+  image = image.view(3, image.shape[2], image.shape[3])  # make image back to a 3D tensor
+  image = unloader(image)
+  plt.imshow(image)
+  if title is not None:
+    plt.title(title)
+
+class ContentLoss(nn.Module):
+  """ the module helps to compute the content loss """
+  def __init__(self, target, weight):
+    super(ContentLoss,self).__init__()
+    self.target = target.detach() * weight
+    self.weight = weight
+    self.criterion = nn.MSELoss()
+
+  def forward(self, input):
+    self.loss = self.criterion(input * self.weight, self.target)
+    self.output = input
+    return self.output
+
+  def backward(self, retain_graph=True):
+    self.loss.backward(retain_graph=retain_graph)
+    return self.loss
+
+class GramMatrix(nn.Module):
+  """ module for computing gram matrix of a layer of activations """
+  def forward(self, input):
+    b, c, h, w = input.size()
+
+    features = input.view(b * c, h * w)
+
+    G = torch.mm(features, features.t())  # compute the gram matrix
+
+    return G.div(b * c * h * w)
+
+class StyleLoss(nn.Module):
+  """ the module helps to compute the style loss at a layer """
+  def __init__(self, target, weight):
+    super(StyleLoss,self).__init__()
+    self.target = target.detach() * weight
+    self.weight = weight
+    self.gram = GramMatrix()
+    self.criterion = nn.MSELoss()
+
+  def forward(self, input):
+    self.output = input.clone()
+    self.G = self.gram(input)
+    self.G.mul_(self.weight)
+    self.loss = self.criterion(self.G, self.target)
+    return self.output
+
+  def backward(self, retain_graph=True):
+    self.loss.backward(retain_graph=retain_graph)
+    return self.loss
+
+def get_style_model_and_losses(vgg, content_img, style_img):
+  """ constructs the model for style transfer as well as the losses
+    Args:
+      vgg: the feature component of a pre-trained VGG-19 network
+      content_img: the content image
+      style_img: the style image
+    Returns:
+      model: the style model
+      content_losses: the list of modules for computing content loss
+      style_losses: the list of modules for computing style loss
+  """
+  vgg = copy.deepcopy(vgg)
+
+  content_losses = []
+  style_losses = []
+
+  model = nn.Sequential()  # the new model
+  gram = GramMatrix()  # for computing the style targets
+
+  if use_cuda:
+    model = model.cuda()
+    gram = gram.cuda()
+
+  i = j = 1
+  for layer in list(vgg):
+    if isinstance(layer, nn.Conv2d):
+      name = 'conv' + str(i) + '_' + str(j)
+      model.add_module(name, layer)
+
+      if name in CONTENT_LAYERS:
+        # add content loss:
+        target = model(content_img).clone()
+        content_loss = ContentLoss(target, CONTENT_WEIGHT)
+        model.add_module('content_loss_' + str(i) + '_' + str(j), content_loss)
+        content_losses.append(content_loss)
+
+      if name in STYLE_LAYERS:
+        # add style loss:
+        target = model(style_img).clone()
+        target_gram = gram(target)
+        style_loss = StyleLoss(target_gram, STYLE_WEIGHT)
+        model.add_module('style_loss_' + str(i) + '_' + str(j), style_loss)
+        style_losses.append(style_loss)
+
+    if isinstance(layer, nn.ReLU):
+      name = 'relu' + str(i) + '_' + str(j)
+      model.add_module(name, layer)
+      j += 1
+
+    if isinstance(layer, nn.MaxPool2d):
+      name = 'avg_pool_' + str(i)
+      avgpool = nn.AvgPool2d(kernel_size=layer.kernel_size,
+                              stride=layer.stride, padding = layer.padding)
+      model.add_module(name,avgpool)
+      i += 1
+      j = 1
+
+  return model, content_losses, style_losses
+
+def get_input_param_and_optimizer(input_img):
+  """ produce the input parameter (the generated image) and the optimizer
+  Args:
+    input_img: the initial generated image
+  Returns:
+    input_param: a parameter has the data of input_img
+    optimizer: an L-BFGS optimizer
+  """
+  # input_img is a parameter that needs to be updated
+  input_param = nn.Parameter(input_img.data)
+  optimizer = optim.LBFGS([input_param], max_iter=1)
+  return input_param, optimizer
+
+def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_steps=300):
+  """ the main method for doing the style transfer
+  Args:
+    vgg: the feature component of a pre-trained VGG-19 network
+    content_img: the content image
+    style_img: the style image
+    input_img: the initial generated image
+    output_dir: the path to the directory storing the output of style transfer
+    num_steps: the maximum number of iterations for updating the generated image
+  """
+  print('Building the style transfer model...')
+  model, content_losses, style_losses = get_style_model_and_losses(vgg, content_img, style_img)
+  input_param, optimizer = get_input_param_and_optimizer(input_img)
+
+  print('Transfering style..')
+  run = [0]
+  while run[0] <= num_steps:
+
+    def closure():
+      # Normalised the value of input_img to be in [0,1]
+      input_param.data.clamp_(0, 1)
+
+      utils.save_image(input_param.data, output_dir + str(run[0]) + '.jpg')
+
+      optimizer.zero_grad()
+      model(input_param)
+      style_score = 0
+      content_score = 0
+
+      for cl in content_losses:
+        content_score += cl.backward()
+      for sl in style_losses:
+        style_score += sl.backward()
+
+      # if run[0] % 10 == 0:
+      logging.info("run {}:".format(run))
+      logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
+        style_score.data[0], content_score.data[0]))
+      run[0] += 1
+
+      return content_score + style_score
+
+    optimizer.step(closure)
+
+  input_param.data.clamp_(0, 1)
+  return input_param.data
+
+def main(args):
+  # set content and style weights
+  if args.style_to_content is not None:
+    STYLE_WEIGHT = CONTENT_WEIGHT * args.style_to_content
+
+  # load images
+  content_img = image_loader(os.getcwd() + '/images/content_images/' + args.content_image).type(dtype)
+  _, _, img_height, img_width = content_img.size()
+  style_img = image_loader(os.getcwd() + '/images/style_images/' + args.style_image, img_height, img_width).type(dtype)
+  assert content_img.size() == style_img.size(), 'the content and style images should have the same size'
+
+  # start transferring from content image
+  input_img = content_img.clone() # Variable(torch.rand(content_img.size())).type(dtype)
+
+  vgg = models.vgg19(pretrained=True).features
+  if use_cuda:
+    vgg = vgg.cuda()
+
+  # name of dir of output is (name_of_content_img + name_of_style_img)
+  output_dir = os.getcwd() + '/images/output_images/' + \
+               args.content_image.split('.')[0] + '_' + args.style_image.split('.')[0] + '/'
+  if not os.path.exists(output_dir):
+    os.mkdir(output_dir)
+
+  # start logging
+  logging.basicConfig(filename=output_dir + 'log', level=logging.DEBUG)
+
+  # transfer style
+  output_img = run_style_transfer(vgg, content_img, style_img, input_img, output_dir)
+  utils.save_image(output_img, output_dir + 'result.jpg')
+
+  logging.info("Transferring finished")
+  logging.info('')
+
+  """ display the images for checking """
+  # plt.figure()
+  # imshow(content_img.data, title='Content Image')
+  # plt.figure()
+  # imshow(style_img.data, title='Style Image')
+  # plt.figure()
+  # imshow(output_img, title='Stylised Image')
+  # plt.show()
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('content_image', help='name of content image', type=str)
+  parser.add_argument('style_image', help='name of style image', type=str)
+  parser.add_argument('--style_to_content', help='the ratio of weights for style and content similarity', type=str)
+
+  args = parser.parse_args()
+  main(args)
