@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 import torchvision.utils as utils
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from PIL import Image
 
 # layers we used to represent content
@@ -61,9 +61,9 @@ def imshow(tensor, title=None):
   image = tensor.clone().cpu()  # we clone the tensor to not do changes on it
   image = image.view(3, image.shape[2], image.shape[3])  # make image back to a 3D tensor
   image = unloader(image)
-  plt.imshow(image)
+  # plt.imshow(image)
   if title is not None:
-    plt.title(title)
+    # plt.title(title)
 
 class ContentLoss(nn.Module):
   """ the module helps to compute the content loss """
