@@ -62,7 +62,7 @@ def imshow(tensor, title=None):
   image = image.view(3, image.shape[2], image.shape[3])  # make image back to a 3D tensor
   image = unloader(image)
   # plt.imshow(image)
-  if title is not None:
+  # if title is not None:
     # plt.title(title)
 
 class ContentLoss(nn.Module):
