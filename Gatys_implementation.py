@@ -12,7 +12,6 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 import torchvision.utils as utils
 
-# import matplotlib.pyplot as plt
 from PIL import Image
 
 # layers we used to represent content
@@ -50,20 +49,20 @@ def image_loader(image_name, height=None, width=None):
   image = image.unsqueeze(0) # make the tensor to be 4D so that VGG can process it
   return image
 
-def imshow(tensor, title=None):
-  """ helper for displaying image
-  Args:
-    tensor: the tensor representing the image we want to display
-    title: the title of the image
-  Returns:
-    None
-  """
-  image = tensor.clone().cpu()  # we clone the tensor to not do changes on it
-  image = image.view(3, image.shape[2], image.shape[3])  # make image back to a 3D tensor
-  image = unloader(image)
-  # plt.imshow(image)
-  # if title is not None:
-    # plt.title(title)
+# def imshow(tensor, title=None):
+#   """ helper for displaying image
+#   Args:
+#     tensor: the tensor representing the image we want to display
+#     title: the title of the image
+#   Returns:
+#     None
+#   """
+#   image = tensor.clone().cpu()  # we clone the tensor to not do changes on it
+#   image = image.view(3, image.shape[2], image.shape[3])  # make image back to a 3D tensor
+#   image = unloader(image)
+#     plt.imshow(image)
+#     if title is not None:
+#       plt.title(title)
 
 class ContentLoss(nn.Module):
   """ the module helps to compute the content loss """
@@ -247,10 +246,6 @@ def main(args):
   # start transferring from content image
   input_img = content_img.clone()  # Variable(torch.rand(content_img.size())).type(dtype)
 
-  vgg = models.vgg19(pretrained=True).features
-  if use_cuda:
-    vgg = vgg.cuda()
-
   # name of dir of output is (name_of_content_img + name_of_style_img)
   output_dir = os.getcwd() + '/images/output_images/' + \
                args.content_image.split('.')[0] + '_' + args.style_image.split('.')[0] + '/'
@@ -270,6 +265,10 @@ def main(args):
           break
         except IOError:
           continue
+
+  vgg = models.vgg19(pretrained=True).features
+  if use_cuda:
+    vgg = vgg.cuda()
 
   # start logging
   logging.basicConfig(filename=output_dir + 'log', level=logging.DEBUG)

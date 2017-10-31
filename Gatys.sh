@@ -9,5 +9,5 @@ for content_img in ./images/content_images/*.jpg; do
 done
 
 git add *
-git commit -m 'Testing Gatys.sh'
+git commit -m 'Trained Gatys'
 git push
