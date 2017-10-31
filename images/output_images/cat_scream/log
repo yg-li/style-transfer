@@ -1,0 +1,601 @@
+INFO:root:run [0]:
+INFO:root:Style Loss : 9.522522 Content Loss: 0.000000
+INFO:root:run [1]:
+INFO:root:Style Loss : 9.521764 Content Loss: 0.000000
+INFO:root:run [2]:
+INFO:root:Style Loss : 6.679682 Content Loss: 0.295609
+INFO:root:run [3]:
+INFO:root:Style Loss : 4.599178 Content Loss: 0.581736
+INFO:root:run [4]:
+INFO:root:Style Loss : 3.136918 Content Loss: 0.759441
+INFO:root:run [5]:
+INFO:root:Style Loss : 2.645521 Content Loss: 0.920399
+INFO:root:run [6]:
+INFO:root:Style Loss : 2.332622 Content Loss: 0.803977
+INFO:root:run [7]:
+INFO:root:Style Loss : 2.215130 Content Loss: 0.732939
+INFO:root:run [8]:
+INFO:root:Style Loss : 1.924918 Content Loss: 0.689962
+INFO:root:run [9]:
+INFO:root:Style Loss : 1.612799 Content Loss: 0.727414
+INFO:root:run [10]:
+INFO:root:Style Loss : 1.533362 Content Loss: 0.697828
+INFO:root:run [11]:
+INFO:root:Style Loss : 1.424991 Content Loss: 0.668011
+INFO:root:run [12]:
+INFO:root:Style Loss : 1.347438 Content Loss: 0.673511
+INFO:root:run [13]:
+INFO:root:Style Loss : 1.270151 Content Loss: 0.658229
+INFO:root:run [14]:
+INFO:root:Style Loss : 1.208619 Content Loss: 0.657939
+INFO:root:run [15]:
+INFO:root:Style Loss : 1.153808 Content Loss: 0.632456
+INFO:root:run [16]:
+INFO:root:Style Loss : 1.129231 Content Loss: 0.616122
+INFO:root:run [17]:
+INFO:root:Style Loss : 1.076923 Content Loss: 0.624104
+INFO:root:run [18]:
+INFO:root:Style Loss : 1.039687 Content Loss: 0.596734
+INFO:root:run [19]:
+INFO:root:Style Loss : 0.990192 Content Loss: 0.598577
+INFO:root:run [20]:
+INFO:root:Style Loss : 0.964700 Content Loss: 0.577055
+INFO:root:run [21]:
+INFO:root:Style Loss : 0.930514 Content Loss: 0.580129
+INFO:root:run [22]:
+INFO:root:Style Loss : 0.897264 Content Loss: 0.573745
+INFO:root:run [23]:
+INFO:root:Style Loss : 0.876523 Content Loss: 0.557796
+INFO:root:run [24]:
+INFO:root:Style Loss : 0.825878 Content Loss: 0.584913
+INFO:root:run [25]:
+INFO:root:Style Loss : 0.805349 Content Loss: 0.544401
+INFO:root:run [26]:
+INFO:root:Style Loss : 0.782962 Content Loss: 0.543346
+INFO:root:run [27]:
+INFO:root:Style Loss : 0.746272 Content Loss: 0.546439
+INFO:root:run [28]:
+INFO:root:Style Loss : 0.720232 Content Loss: 0.534228
+INFO:root:run [29]:
+INFO:root:Style Loss : 0.690314 Content Loss: 0.544750
+INFO:root:run [30]:
+INFO:root:Style Loss : 0.666312 Content Loss: 0.533629
+INFO:root:run [31]:
+INFO:root:Style Loss : 0.653888 Content Loss: 0.524647
+INFO:root:run [32]:
+INFO:root:Style Loss : 0.636240 Content Loss: 0.518197
+INFO:root:run [33]:
+INFO:root:Style Loss : 0.613816 Content Loss: 0.511014
+INFO:root:run [34]:
+INFO:root:Style Loss : 0.576254 Content Loss: 0.520274
+INFO:root:run [35]:
+INFO:root:Style Loss : 0.555103 Content Loss: 0.508856
+INFO:root:run [36]:
+INFO:root:Style Loss : 0.535476 Content Loss: 0.511118
+INFO:root:run [37]:
+INFO:root:Style Loss : 0.519283 Content Loss: 0.503040
+INFO:root:run [38]:
+INFO:root:Style Loss : 0.494437 Content Loss: 0.505797
+INFO:root:run [39]:
+INFO:root:Style Loss : 0.482024 Content Loss: 0.500040
+INFO:root:run [40]:
+INFO:root:Style Loss : 0.457120 Content Loss: 0.504605
+INFO:root:run [41]:
+INFO:root:Style Loss : 0.440387 Content Loss: 0.494435
+INFO:root:run [42]:
+INFO:root:Style Loss : 0.416842 Content Loss: 0.499723
+INFO:root:run [43]:
+INFO:root:Style Loss : 0.404041 Content Loss: 0.489732
+INFO:root:run [44]:
+INFO:root:Style Loss : 0.391125 Content Loss: 0.488951
+INFO:root:run [45]:
+INFO:root:Style Loss : 0.375722 Content Loss: 0.481717
+INFO:root:run [46]:
+INFO:root:Style Loss : 0.355816 Content Loss: 0.487324
+INFO:root:run [47]:
+INFO:root:Style Loss : 0.337101 Content Loss: 0.483566
+INFO:root:run [48]:
+INFO:root:Style Loss : 0.320921 Content Loss: 0.483473
+INFO:root:run [49]:
+INFO:root:Style Loss : 0.305550 Content Loss: 0.477979
+INFO:root:run [50]:
+INFO:root:Style Loss : 0.296300 Content Loss: 0.477149
+INFO:root:run [51]:
+INFO:root:Style Loss : 0.288172 Content Loss: 0.472989
+INFO:root:run [52]:
+INFO:root:Style Loss : 0.279369 Content Loss: 0.472296
+INFO:root:run [53]:
+INFO:root:Style Loss : 0.272282 Content Loss: 0.468278
+INFO:root:run [54]:
+INFO:root:Style Loss : 0.261592 Content Loss: 0.469954
+INFO:root:run [55]:
+INFO:root:Style Loss : 0.257169 Content Loss: 0.463729
+INFO:root:run [56]:
+INFO:root:Style Loss : 0.241049 Content Loss: 0.469785
+INFO:root:run [57]:
+INFO:root:Style Loss : 0.242803 Content Loss: 0.456681
+INFO:root:run [58]:
+INFO:root:Style Loss : 0.234637 Content Loss: 0.459294
+INFO:root:run [59]:
+INFO:root:Style Loss : 0.224350 Content Loss: 0.464024
+INFO:root:run [60]:
+INFO:root:Style Loss : 0.224928 Content Loss: 0.456652
+INFO:root:run [61]:
+INFO:root:Style Loss : 0.224527 Content Loss: 0.452233
+INFO:root:run [62]:
+INFO:root:Style Loss : 0.221076 Content Loss: 0.452329
+INFO:root:run [63]:
+INFO:root:Style Loss : 0.218772 Content Loss: 0.448813
+INFO:root:run [64]:
+INFO:root:Style Loss : 0.217536 Content Loss: 0.447524
+INFO:root:run [65]:
+INFO:root:Style Loss : 0.215320 Content Loss: 0.446125
+INFO:root:run [66]:
+INFO:root:Style Loss : 0.215436 Content Loss: 0.443438
+INFO:root:run [67]:
+INFO:root:Style Loss : 0.212160 Content Loss: 0.444179
+INFO:root:run [68]:
+INFO:root:Style Loss : 0.210857 Content Loss: 0.440994
+INFO:root:run [69]:
+INFO:root:Style Loss : 0.211500 Content Loss: 0.441809
+INFO:root:run [70]:
+INFO:root:Style Loss : 0.211995 Content Loss: 0.435472
+INFO:root:run [71]:
+INFO:root:Style Loss : 0.208650 Content Loss: 0.436799
+INFO:root:run [72]:
+INFO:root:Style Loss : 0.207561 Content Loss: 0.434931
+INFO:root:run [73]:
+INFO:root:Style Loss : 0.207354 Content Loss: 0.433714
+INFO:root:run [74]:
+INFO:root:Style Loss : 0.206852 Content Loss: 0.431187
+INFO:root:run [75]:
+INFO:root:Style Loss : 0.205743 Content Loss: 0.430971
+INFO:root:run [76]:
+INFO:root:Style Loss : 0.205609 Content Loss: 0.429061
+INFO:root:run [77]:
+INFO:root:Style Loss : 0.204477 Content Loss: 0.428354
+INFO:root:run [78]:
+INFO:root:Style Loss : 0.204257 Content Loss: 0.426168
+INFO:root:run [79]:
+INFO:root:Style Loss : 0.203794 Content Loss: 0.425223
+INFO:root:run [80]:
+INFO:root:Style Loss : 0.201913 Content Loss: 0.424944
+INFO:root:run [81]:
+INFO:root:Style Loss : 0.203191 Content Loss: 0.424222
+INFO:root:run [82]:
+INFO:root:Style Loss : 0.204049 Content Loss: 0.420649
+INFO:root:run [83]:
+INFO:root:Style Loss : 0.202422 Content Loss: 0.422084
+INFO:root:run [84]:
+INFO:root:Style Loss : 0.200456 Content Loss: 0.421133
+INFO:root:run [85]:
+INFO:root:Style Loss : 0.200701 Content Loss: 0.419210
+INFO:root:run [86]:
+INFO:root:Style Loss : 0.198400 Content Loss: 0.419735
+INFO:root:run [87]:
+INFO:root:Style Loss : 0.200659 Content Loss: 0.416444
+INFO:root:run [88]:
+INFO:root:Style Loss : 0.198619 Content Loss: 0.417142
+INFO:root:run [89]:
+INFO:root:Style Loss : 0.197704 Content Loss: 0.416385
+INFO:root:run [90]:
+INFO:root:Style Loss : 0.196894 Content Loss: 0.416645
+INFO:root:run [91]:
+INFO:root:Style Loss : 0.197431 Content Loss: 0.414165
+INFO:root:run [92]:
+INFO:root:Style Loss : 0.196933 Content Loss: 0.413849
+INFO:root:run [93]:
+INFO:root:Style Loss : 0.196149 Content Loss: 0.413403
+INFO:root:run [94]:
+INFO:root:Style Loss : 0.196941 Content Loss: 0.411411
+INFO:root:run [95]:
+INFO:root:Style Loss : 0.195004 Content Loss: 0.412175
+INFO:root:run [96]:
+INFO:root:Style Loss : 0.195106 Content Loss: 0.410702
+INFO:root:run [97]:
+INFO:root:Style Loss : 0.194737 Content Loss: 0.410486
+INFO:root:run [98]:
+INFO:root:Style Loss : 0.194211 Content Loss: 0.409774
+INFO:root:run [99]:
+INFO:root:Style Loss : 0.194214 Content Loss: 0.409186
+INFO:root:run [100]:
+INFO:root:Style Loss : 0.193865 Content Loss: 0.407964
+INFO:root:run [101]:
+INFO:root:Style Loss : 0.192944 Content Loss: 0.408162
+INFO:root:run [102]:
+INFO:root:Style Loss : 0.193051 Content Loss: 0.406863
+INFO:root:run [103]:
+INFO:root:Style Loss : 0.191635 Content Loss: 0.407442
+INFO:root:run [104]:
+INFO:root:Style Loss : 0.192129 Content Loss: 0.406053
+INFO:root:run [105]:
+INFO:root:Style Loss : 0.191562 Content Loss: 0.405619
+INFO:root:run [106]:
+INFO:root:Style Loss : 0.191282 Content Loss: 0.405112
+INFO:root:run [107]:
+INFO:root:Style Loss : 0.190832 Content Loss: 0.404415
+INFO:root:run [108]:
+INFO:root:Style Loss : 0.191080 Content Loss: 0.404074
+INFO:root:run [109]:
+INFO:root:Style Loss : 0.190605 Content Loss: 0.403112
+INFO:root:run [110]:
+INFO:root:Style Loss : 0.189967 Content Loss: 0.403727
+INFO:root:run [111]:
+INFO:root:Style Loss : 0.189658 Content Loss: 0.402676
+INFO:root:run [112]:
+INFO:root:Style Loss : 0.189425 Content Loss: 0.402461
+INFO:root:run [113]:
+INFO:root:Style Loss : 0.189123 Content Loss: 0.401749
+INFO:root:run [114]:
+INFO:root:Style Loss : 0.189249 Content Loss: 0.400929
+INFO:root:run [115]:
+INFO:root:Style Loss : 0.188640 Content Loss: 0.400950
+INFO:root:run [116]:
+INFO:root:Style Loss : 0.188139 Content Loss: 0.400585
+INFO:root:run [117]:
+INFO:root:Style Loss : 0.187635 Content Loss: 0.400522
+INFO:root:run [118]:
+INFO:root:Style Loss : 0.187286 Content Loss: 0.399876
+INFO:root:run [119]:
+INFO:root:Style Loss : 0.187754 Content Loss: 0.399190
+INFO:root:run [120]:
+INFO:root:Style Loss : 0.187141 Content Loss: 0.398914
+INFO:root:run [121]:
+INFO:root:Style Loss : 0.187062 Content Loss: 0.398983
+INFO:root:run [122]:
+INFO:root:Style Loss : 0.187512 Content Loss: 0.397069
+INFO:root:run [123]:
+INFO:root:Style Loss : 0.186008 Content Loss: 0.398061
+INFO:root:run [124]:
+INFO:root:Style Loss : 0.185838 Content Loss: 0.397543
+INFO:root:run [125]:
+INFO:root:Style Loss : 0.185335 Content Loss: 0.397625
+INFO:root:run [126]:
+INFO:root:Style Loss : 0.184974 Content Loss: 0.397350
+INFO:root:run [127]:
+INFO:root:Style Loss : 0.185166 Content Loss: 0.396636
+INFO:root:run [128]:
+INFO:root:Style Loss : 0.185023 Content Loss: 0.396138
+INFO:root:run [129]:
+INFO:root:Style Loss : 0.184620 Content Loss: 0.396126
+INFO:root:run [130]:
+INFO:root:Style Loss : 0.184872 Content Loss: 0.395424
+INFO:root:run [131]:
+INFO:root:Style Loss : 0.184033 Content Loss: 0.395064
+INFO:root:run [132]:
+INFO:root:Style Loss : 0.184606 Content Loss: 0.397269
+INFO:root:run [133]:
+INFO:root:Style Loss : 0.185511 Content Loss: 0.394964
+INFO:root:run [134]:
+INFO:root:Style Loss : 0.185375 Content Loss: 0.397240
+INFO:root:run [135]:
+INFO:root:Style Loss : 0.184042 Content Loss: 0.394506
+INFO:root:run [136]:
+INFO:root:Style Loss : 0.184050 Content Loss: 0.393637
+INFO:root:run [137]:
+INFO:root:Style Loss : 0.183450 Content Loss: 0.393446
+INFO:root:run [138]:
+INFO:root:Style Loss : 0.183000 Content Loss: 0.393186
+INFO:root:run [139]:
+INFO:root:Style Loss : 0.181713 Content Loss: 0.394000
+INFO:root:run [140]:
+INFO:root:Style Loss : 0.181988 Content Loss: 0.393433
+INFO:root:run [141]:
+INFO:root:Style Loss : 0.181416 Content Loss: 0.393768
+INFO:root:run [142]:
+INFO:root:Style Loss : 0.181715 Content Loss: 0.392781
+INFO:root:run [143]:
+INFO:root:Style Loss : 0.181574 Content Loss: 0.392806
+INFO:root:run [144]:
+INFO:root:Style Loss : 0.181616 Content Loss: 0.392377
+INFO:root:run [145]:
+INFO:root:Style Loss : 0.181633 Content Loss: 0.392348
+INFO:root:run [146]:
+INFO:root:Style Loss : 0.181356 Content Loss: 0.391454
+INFO:root:run [147]:
+INFO:root:Style Loss : 0.180896 Content Loss: 0.392212
+INFO:root:run [148]:
+INFO:root:Style Loss : 0.180080 Content Loss: 0.392461
+INFO:root:run [149]:
+INFO:root:Style Loss : 0.180254 Content Loss: 0.391559
+INFO:root:run [150]:
+INFO:root:Style Loss : 0.180274 Content Loss: 0.391380
+INFO:root:run [151]:
+INFO:root:Style Loss : 0.179470 Content Loss: 0.391547
+INFO:root:run [152]:
+INFO:root:Style Loss : 0.180459 Content Loss: 0.390572
+INFO:root:run [153]:
+INFO:root:Style Loss : 0.179569 Content Loss: 0.390492
+INFO:root:run [154]:
+INFO:root:Style Loss : 0.179141 Content Loss: 0.391691
+INFO:root:run [155]:
+INFO:root:Style Loss : 0.178743 Content Loss: 0.390571
+INFO:root:run [156]:
+INFO:root:Style Loss : 0.179786 Content Loss: 0.395817
+INFO:root:run [157]:
+INFO:root:Style Loss : 0.181646 Content Loss: 0.391668
+INFO:root:run [158]:
+INFO:root:Style Loss : 0.180419 Content Loss: 0.395616
+INFO:root:run [159]:
+INFO:root:Style Loss : 0.182569 Content Loss: 0.388993
+INFO:root:run [160]:
+INFO:root:Style Loss : 0.180631 Content Loss: 0.389556
+INFO:root:run [161]:
+INFO:root:Style Loss : 0.178825 Content Loss: 0.390420
+INFO:root:run [162]:
+INFO:root:Style Loss : 0.178060 Content Loss: 0.390150
+INFO:root:run [163]:
+INFO:root:Style Loss : 0.177202 Content Loss: 0.389673
+INFO:root:run [164]:
+INFO:root:Style Loss : 0.177495 Content Loss: 0.388410
+INFO:root:run [165]:
+INFO:root:Style Loss : 0.176199 Content Loss: 0.389070
+INFO:root:run [166]:
+INFO:root:Style Loss : 0.176108 Content Loss: 0.388739
+INFO:root:run [167]:
+INFO:root:Style Loss : 0.175814 Content Loss: 0.388996
+INFO:root:run [168]:
+INFO:root:Style Loss : 0.177215 Content Loss: 0.387573
+INFO:root:run [169]:
+INFO:root:Style Loss : 0.176677 Content Loss: 0.387341
+INFO:root:run [170]:
+INFO:root:Style Loss : 0.176062 Content Loss: 0.387678
+INFO:root:run [171]:
+INFO:root:Style Loss : 0.176237 Content Loss: 0.387354
+INFO:root:run [172]:
+INFO:root:Style Loss : 0.176259 Content Loss: 0.388796
+INFO:root:run [173]:
+INFO:root:Style Loss : 0.176945 Content Loss: 0.387432
+INFO:root:run [174]:
+INFO:root:Style Loss : 0.176678 Content Loss: 0.387248
+INFO:root:run [175]:
+INFO:root:Style Loss : 0.176211 Content Loss: 0.387056
+INFO:root:run [176]:
+INFO:root:Style Loss : 0.176200 Content Loss: 0.387261
+INFO:root:run [177]:
+INFO:root:Style Loss : 0.175027 Content Loss: 0.387840
+INFO:root:run [178]:
+INFO:root:Style Loss : 0.176577 Content Loss: 0.386108
+INFO:root:run [179]:
+INFO:root:Style Loss : 0.175664 Content Loss: 0.386712
+INFO:root:run [180]:
+INFO:root:Style Loss : 0.175952 Content Loss: 0.386092
+INFO:root:run [181]:
+INFO:root:Style Loss : 0.175249 Content Loss: 0.386615
+INFO:root:run [182]:
+INFO:root:Style Loss : 0.174804 Content Loss: 0.386304
+INFO:root:run [183]:
+INFO:root:Style Loss : 0.174814 Content Loss: 0.386495
+INFO:root:run [184]:
+INFO:root:Style Loss : 0.174762 Content Loss: 0.385593
+INFO:root:run [185]:
+INFO:root:Style Loss : 0.175023 Content Loss: 0.386692
+INFO:root:run [186]:
+INFO:root:Style Loss : 0.175729 Content Loss: 0.385749
+INFO:root:run [187]:
+INFO:root:Style Loss : 0.182289 Content Loss: 0.403948
+INFO:root:run [188]:
+INFO:root:Style Loss : 0.179825 Content Loss: 0.387538
+INFO:root:run [189]:
+INFO:root:Style Loss : 0.174989 Content Loss: 0.386696
+INFO:root:run [190]:
+INFO:root:Style Loss : 0.176191 Content Loss: 0.384278
+INFO:root:run [191]:
+INFO:root:Style Loss : 0.175602 Content Loss: 0.384187
+INFO:root:run [192]:
+INFO:root:Style Loss : 0.173617 Content Loss: 0.384969
+INFO:root:run [193]:
+INFO:root:Style Loss : 0.174109 Content Loss: 0.383681
+INFO:root:run [194]:
+INFO:root:Style Loss : 0.172994 Content Loss: 0.384228
+INFO:root:run [195]:
+INFO:root:Style Loss : 0.173280 Content Loss: 0.383466
+INFO:root:run [196]:
+INFO:root:Style Loss : 0.173102 Content Loss: 0.383593
+INFO:root:run [197]:
+INFO:root:Style Loss : 0.173396 Content Loss: 0.383636
+INFO:root:run [198]:
+INFO:root:Style Loss : 0.173420 Content Loss: 0.383417
+INFO:root:run [199]:
+INFO:root:Style Loss : 0.173607 Content Loss: 0.382679
+INFO:root:run [200]:
+INFO:root:Style Loss : 0.172633 Content Loss: 0.384100
+INFO:root:run [201]:
+INFO:root:Style Loss : 0.173572 Content Loss: 0.382965
+INFO:root:run [202]:
+INFO:root:Style Loss : 0.173540 Content Loss: 0.383570
+INFO:root:run [203]:
+INFO:root:Style Loss : 0.174197 Content Loss: 0.383234
+INFO:root:run [204]:
+INFO:root:Style Loss : 0.174616 Content Loss: 0.383312
+INFO:root:run [205]:
+INFO:root:Style Loss : 0.173864 Content Loss: 0.383269
+INFO:root:run [206]:
+INFO:root:Style Loss : 0.174948 Content Loss: 0.382741
+INFO:root:run [207]:
+INFO:root:Style Loss : 0.174521 Content Loss: 0.382181
+INFO:root:run [208]:
+INFO:root:Style Loss : 0.173294 Content Loss: 0.383003
+INFO:root:run [209]:
+INFO:root:Style Loss : 0.173723 Content Loss: 0.381864
+INFO:root:run [210]:
+INFO:root:Style Loss : 0.173425 Content Loss: 0.382415
+INFO:root:run [211]:
+INFO:root:Style Loss : 0.173793 Content Loss: 0.381804
+INFO:root:run [212]:
+INFO:root:Style Loss : 0.173522 Content Loss: 0.381490
+INFO:root:run [213]:
+INFO:root:Style Loss : 0.173400 Content Loss: 0.381387
+INFO:root:run [214]:
+INFO:root:Style Loss : 0.173178 Content Loss: 0.381050
+INFO:root:run [215]:
+INFO:root:Style Loss : 0.173068 Content Loss: 0.381137
+INFO:root:run [216]:
+INFO:root:Style Loss : 0.172970 Content Loss: 0.380724
+INFO:root:run [217]:
+INFO:root:Style Loss : 0.173105 Content Loss: 0.380769
+INFO:root:run [218]:
+INFO:root:Style Loss : 0.172835 Content Loss: 0.380576
+INFO:root:run [219]:
+INFO:root:Style Loss : 0.172920 Content Loss: 0.380204
+INFO:root:run [220]:
+INFO:root:Style Loss : 0.172762 Content Loss: 0.379951
+INFO:root:run [221]:
+INFO:root:Style Loss : 0.172724 Content Loss: 0.379735
+INFO:root:run [222]:
+INFO:root:Style Loss : 0.172289 Content Loss: 0.379895
+INFO:root:run [223]:
+INFO:root:Style Loss : 0.172574 Content Loss: 0.379432
+INFO:root:run [224]:
+INFO:root:Style Loss : 0.172602 Content Loss: 0.379512
+INFO:root:run [225]:
+INFO:root:Style Loss : 0.172870 Content Loss: 0.378953
+INFO:root:run [226]:
+INFO:root:Style Loss : 0.172682 Content Loss: 0.379531
+INFO:root:run [227]:
+INFO:root:Style Loss : 0.172270 Content Loss: 0.379347
+INFO:root:run [228]:
+INFO:root:Style Loss : 0.172680 Content Loss: 0.379018
+INFO:root:run [229]:
+INFO:root:Style Loss : 0.172585 Content Loss: 0.378480
+INFO:root:run [230]:
+INFO:root:Style Loss : 0.172960 Content Loss: 0.378475
+INFO:root:run [231]:
+INFO:root:Style Loss : 0.172422 Content Loss: 0.378702
+INFO:root:run [232]:
+INFO:root:Style Loss : 0.172047 Content Loss: 0.378344
+INFO:root:run [233]:
+INFO:root:Style Loss : 0.172113 Content Loss: 0.381957
+INFO:root:run [234]:
+INFO:root:Style Loss : 0.174690 Content Loss: 0.379180
+INFO:root:run [235]:
+INFO:root:Style Loss : 0.177896 Content Loss: 0.387180
+INFO:root:run [236]:
+INFO:root:Style Loss : 0.175274 Content Loss: 0.379381
+INFO:root:run [237]:
+INFO:root:Style Loss : 0.174153 Content Loss: 0.378663
+INFO:root:run [238]:
+INFO:root:Style Loss : 0.172899 Content Loss: 0.378986
+INFO:root:run [239]:
+INFO:root:Style Loss : 0.173371 Content Loss: 0.377685
+INFO:root:run [240]:
+INFO:root:Style Loss : 0.172894 Content Loss: 0.377697
+INFO:root:run [241]:
+INFO:root:Style Loss : 0.172657 Content Loss: 0.377423
+INFO:root:run [242]:
+INFO:root:Style Loss : 0.171781 Content Loss: 0.377806
+INFO:root:run [243]:
+INFO:root:Style Loss : 0.171671 Content Loss: 0.377403
+INFO:root:run [244]:
+INFO:root:Style Loss : 0.171539 Content Loss: 0.377136
+INFO:root:run [245]:
+INFO:root:Style Loss : 0.171226 Content Loss: 0.377141
+INFO:root:run [246]:
+INFO:root:Style Loss : 0.171385 Content Loss: 0.376820
+INFO:root:run [247]:
+INFO:root:Style Loss : 0.171295 Content Loss: 0.376587
+INFO:root:run [248]:
+INFO:root:Style Loss : 0.171192 Content Loss: 0.376531
+INFO:root:run [249]:
+INFO:root:Style Loss : 0.171429 Content Loss: 0.376280
+INFO:root:run [250]:
+INFO:root:Style Loss : 0.171077 Content Loss: 0.376648
+INFO:root:run [251]:
+INFO:root:Style Loss : 0.171504 Content Loss: 0.375937
+INFO:root:run [252]:
+INFO:root:Style Loss : 0.171348 Content Loss: 0.375891
+INFO:root:run [253]:
+INFO:root:Style Loss : 0.171435 Content Loss: 0.375853
+INFO:root:run [254]:
+INFO:root:Style Loss : 0.171185 Content Loss: 0.376012
+INFO:root:run [255]:
+INFO:root:Style Loss : 0.171424 Content Loss: 0.375727
+INFO:root:run [256]:
+INFO:root:Style Loss : 0.171340 Content Loss: 0.375577
+INFO:root:run [257]:
+INFO:root:Style Loss : 0.171336 Content Loss: 0.376110
+INFO:root:run [258]:
+INFO:root:Style Loss : 0.171110 Content Loss: 0.375657
+INFO:root:run [259]:
+INFO:root:Style Loss : 0.171288 Content Loss: 0.375342
+INFO:root:run [260]:
+INFO:root:Style Loss : 0.171468 Content Loss: 0.375243
+INFO:root:run [261]:
+INFO:root:Style Loss : 0.171589 Content Loss: 0.375148
+INFO:root:run [262]:
+INFO:root:Style Loss : 0.171366 Content Loss: 0.375176
+INFO:root:run [263]:
+INFO:root:Style Loss : 0.171390 Content Loss: 0.374612
+INFO:root:run [264]:
+INFO:root:Style Loss : 0.171207 Content Loss: 0.374912
+INFO:root:run [265]:
+INFO:root:Style Loss : 0.170866 Content Loss: 0.374831
+INFO:root:run [266]:
+INFO:root:Style Loss : 0.171161 Content Loss: 0.374370
+INFO:root:run [267]:
+INFO:root:Style Loss : 0.171144 Content Loss: 0.374388
+INFO:root:run [268]:
+INFO:root:Style Loss : 0.171425 Content Loss: 0.374285
+INFO:root:run [269]:
+INFO:root:Style Loss : 0.170908 Content Loss: 0.374332
+INFO:root:run [270]:
+INFO:root:Style Loss : 0.171112 Content Loss: 0.374340
+INFO:root:run [271]:
+INFO:root:Style Loss : 0.171236 Content Loss: 0.373813
+INFO:root:run [272]:
+INFO:root:Style Loss : 0.170733 Content Loss: 0.374152
+INFO:root:run [273]:
+INFO:root:Style Loss : 0.170802 Content Loss: 0.374076
+INFO:root:run [274]:
+INFO:root:Style Loss : 0.170815 Content Loss: 0.374058
+INFO:root:run [275]:
+INFO:root:Style Loss : 0.171491 Content Loss: 0.373285
+INFO:root:run [276]:
+INFO:root:Style Loss : 0.171063 Content Loss: 0.373414
+INFO:root:run [277]:
+INFO:root:Style Loss : 0.170828 Content Loss: 0.373490
+INFO:root:run [278]:
+INFO:root:Style Loss : 0.170661 Content Loss: 0.373370
+INFO:root:run [279]:
+INFO:root:Style Loss : 0.170655 Content Loss: 0.373633
+INFO:root:run [280]:
+INFO:root:Style Loss : 0.170749 Content Loss: 0.373090
+INFO:root:run [281]:
+INFO:root:Style Loss : 0.170915 Content Loss: 0.373148
+INFO:root:run [282]:
+INFO:root:Style Loss : 0.170596 Content Loss: 0.372927
+INFO:root:run [283]:
+INFO:root:Style Loss : 0.170936 Content Loss: 0.372813
+INFO:root:run [284]:
+INFO:root:Style Loss : 0.170745 Content Loss: 0.372746
+INFO:root:run [285]:
+INFO:root:Style Loss : 0.170477 Content Loss: 0.372996
+INFO:root:run [286]:
+INFO:root:Style Loss : 0.170606 Content Loss: 0.372624
+INFO:root:run [287]:
+INFO:root:Style Loss : 0.170103 Content Loss: 0.373074
+INFO:root:run [288]:
+INFO:root:Style Loss : 0.170794 Content Loss: 0.372133
+INFO:root:run [289]:
+INFO:root:Style Loss : 0.170658 Content Loss: 0.372106
+INFO:root:run [290]:
+INFO:root:Style Loss : 0.170721 Content Loss: 0.372189
+INFO:root:run [291]:
+INFO:root:Style Loss : 0.170392 Content Loss: 0.372435
+INFO:root:run [292]:
+INFO:root:Style Loss : 0.170845 Content Loss: 0.371808
+INFO:root:run [293]:
+INFO:root:Style Loss : 0.170523 Content Loss: 0.371897
+INFO:root:run [294]:
+INFO:root:Style Loss : 0.170719 Content Loss: 0.372252
+INFO:root:run [295]:
+INFO:root:Style Loss : 0.170302 Content Loss: 0.372241
+INFO:root:run [296]:
+INFO:root:Style Loss : 0.170649 Content Loss: 0.372311
+INFO:root:run [297]:
+INFO:root:Style Loss : 0.170950 Content Loss: 0.371560
+INFO:root:run [298]:
+INFO:root:Style Loss : 0.170728 Content Loss: 0.371460
+INFO:root:run [299]:
+INFO:root:Style Loss : 0.170279 Content Loss: 0.371880
+INFO:root:Transferring finished
