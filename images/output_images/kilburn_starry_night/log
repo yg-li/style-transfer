@@ -1,0 +1,20 @@
+INFO:root:run [0]:
+INFO:root:Style Loss : 1.029447 Content Loss: 0.000000
+INFO:root:run [1]:
+INFO:root:Style Loss : 1.029261 Content Loss: 0.000000
+INFO:root:run [2]:
+INFO:root:Style Loss : 0.427945 Content Loss: 0.103423
+INFO:root:run [3]:
+INFO:root:Style Loss : 0.282149 Content Loss: 0.101658
+INFO:root:run [4]:
+INFO:root:Style Loss : 0.178434 Content Loss: 0.099897
+INFO:root:run [5]:
+INFO:root:Style Loss : 0.143646 Content Loss: 0.091394
+INFO:root:run [6]:
+INFO:root:Style Loss : 0.131181 Content Loss: 0.081062
+INFO:root:run [7]:
+INFO:root:Style Loss : 0.124313 Content Loss: 0.070716
+INFO:root:run [8]:
+INFO:root:Style Loss : 0.115554 Content Loss: 0.063227
+INFO:root:run [9]:
+INFO:root:Style Loss : 0.106548 Content Loss: 0.058911

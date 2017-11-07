@@ -15,9 +15,9 @@ import torchvision.utils as utils
 from PIL import Image
 
 # layers we used to represent content
-CONTENT_LAYERS = ['conv4_2']
+CONTENT_LAYERS = ['relu4_2']
 # layers we used to represent style
-STYLE_LAYERS = ['conv1_1', 'conv2_1', 'conv3_1', 'conv4_1', 'conv5_1']
+STYLE_LAYERS = ['relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1']
 # how important is the content of content image and that of the generated image being similar
 CONTENT_WEIGHT = 1
 # how important is the style of style image and that of the generated image being similar
@@ -141,6 +141,10 @@ def get_style_model_and_losses(vgg, content_img, style_img):
       name = 'conv' + str(i) + '_' + str(j)
       model.add_module(name, layer)
 
+    if isinstance(layer, nn.ReLU):
+      name = 'relu' + str(i) + '_' + str(j)
+      model.add_module(name, layer)
+
       if name in CONTENT_LAYERS:
         # add content loss:
         target = model(content_img).clone()
@@ -156,9 +160,6 @@ def get_style_model_and_losses(vgg, content_img, style_img):
         model.add_module('style_loss_' + str(i) + '_' + str(j), style_loss)
         style_losses.append(style_loss)
 
-    if isinstance(layer, nn.ReLU):
-      name = 'relu' + str(i) + '_' + str(j)
-      model.add_module(name, layer)
       j += 1
 
     if isinstance(layer, nn.MaxPool2d):
