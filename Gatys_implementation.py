@@ -245,7 +245,7 @@ def main(args):
   assert content_img.size() == style_img.size(), 'the content and style images should have the same size'
 
   # start transferring from content image
-  input_img = content_img.clone()  # Variable(torch.rand(content_img.size())).type(dtype)
+  input_img = style_img.clone()  # Variable(torch.rand(content_img.size())).type(dtype)
 
   # name of dir of output is (name_of_content_img + name_of_style_img)
   output_dir = os.getcwd() + '/images/output_images/' + \
