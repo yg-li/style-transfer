@@ -31,7 +31,6 @@ dtype = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 
 # helpers
 toTensor = transforms.ToTensor()
-unloader = transforms.ToPILImage()
 
 def image_loader(image_name, height=None, width=None):
   """ helper for loading images
@@ -48,21 +47,6 @@ def image_loader(image_name, height=None, width=None):
     image = Variable(toTensor(image.resize((width, height))))
   image = image.unsqueeze(0) # make the tensor to be 4D so that VGG can process it
   return image
-
-# def imshow(tensor, title=None):
-#   """ helper for displaying image
-#   Args:
-#     tensor: the tensor representing the image we want to display
-#     title: the title of the image
-#   Returns:
-#     None
-#   """
-#   image = tensor.clone().cpu()  # we clone the tensor to not do changes on it
-#   image = image.view(3, image.shape[2], image.shape[3])  # make image back to a 3D tensor
-#   image = unloader(image)
-#     plt.imshow(image)
-#     if title is not None:
-#       plt.title(title)
 
 class ContentLoss(nn.Module):
   """ the module helps to compute the content loss """
@@ -280,20 +264,11 @@ def main(args):
 
   logging.info("Transferring finished")
 
-  """ display the images for checking """
-  # plt.figure()
-  # imshow(content_img.data, title='Content Image')
-  # plt.figure()
-  # imshow(style_img.data, title='Style Image')
-  # plt.figure()
-  # imshow(output_img, title='Stylised Image')
-  # plt.show()
-
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument('content_image', help='name of content image', type=str)
-  parser.add_argument('style_image', help='name of style image', type=str)
-  parser.add_argument('--style_to_content', help='the ratio of weights for style and content similarity', type=str)
+  parser.add_argument('content-image', help='name of content image', type=str)
+  parser.add_argument('style-image', help='name of style image', type=str)
+  parser.add_argument('--style-to-content', help='the ratio of weights for style and content similarity', type=int)
 
   args = parser.parse_args()
   main(args)
