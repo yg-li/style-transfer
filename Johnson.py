@@ -10,6 +10,7 @@ import torch
 from torch.autograd import Variable
 from torch.optim import Adam
 from torch.utils.data import DataLoader
+from torch import nn
 
 import torchvision.transforms as transforms
 import torchvision.models as models
@@ -210,6 +211,10 @@ def train(args):
 
   vgg = LossNetwork()
 
+  if torch.cuda.device_count() > 1:
+    print('Using', torch.cuda.device_count(), 'GPUs', flush=True)
+    transformer = nn.DataParallel(transformer)
+    vgg = nn.DataParallel(vgg)
   if use_cuda:
     transformer.cuda()
     vgg.cuda()
