@@ -219,7 +219,7 @@ def train(args):
   target_gram_style = [gram_matrix(x) for x in features_style]
 
   for e in range(args.epochs):
-    print('\tStart epoch', str(e), flush=True)
+    print('\tStart epoch', str(e+1), flush=True)
     transformer.train()
     agg_content_loss = 0.0
     agg_style_loss = 0.0

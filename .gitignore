@@ -1,0 +1,4 @@
+.idea
+.Gatys_TF.py
+aws-launch.sh
+train_data/*
