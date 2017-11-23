@@ -279,7 +279,7 @@ def train(args):
 
   # save model
   transformer.eval()
-  if args.cuda:
+  if use_cuda:
     transformer.cpu()
   save_model_filename = (args.style_image.split('/')[-1]).split('.')[0] + '.model'
   # save_model_filename = 'epoch_' + str(args.epochs) + '_' + str(time.ctime()).replace(' ', '_') + '_' + str(
