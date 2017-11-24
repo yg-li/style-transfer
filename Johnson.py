@@ -30,6 +30,7 @@ toTensor = transforms.ToTensor()
 normaliseImage = transforms.Normalize(MEAN_IMAGE, STD_IMAGE)
 
 def check_paths(args):
+  """ Check if the path exist, if not create one """
   try:
     if not os.path.exists(args.save_model_dir):
       os.makedirs(args.save_model_dir)
@@ -55,6 +56,7 @@ def image_loader(image_name, height=None, width=None):
   return image
 
 def normalize_images(images):
+  """ Normalised a batch of images wrt the Imagenet dataset """
   # normalize using imagenet mean and std
   mean = images.data.new(images.data.size())
   std = images.data.new(images.data.size())
@@ -64,7 +66,10 @@ def normalize_images(images):
   return (images - Variable(mean)) / Variable(std)
 
 class LossNetwork(torch.nn.Module):
-  ''' Module based on pre-trained VGG 19 for extracting high level features of image '''
+  ''' Module based on pre-trained VGG 19 for extracting high level features of image
+    Use relu3_3 for content representation
+    Use relu1_2, relu2_2, relu3_3, and relu4_3 for style representation
+  '''
   def __init__(self):
     super(LossNetwork, self).__init__()
     vgg = models.vgg16(pretrained=True).features
@@ -97,6 +102,7 @@ class LossNetwork(torch.nn.Module):
     return out
 
 def gram_matrix(input):
+  """ Compute batch-wise gram matrices """
   (b, ch, h, w) = input.size()
   features = input.view(b, ch, w * h)
   G = features.bmm(features.transpose(1,2))
