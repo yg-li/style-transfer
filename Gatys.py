@@ -19,9 +19,9 @@ CONTENT_LAYERS = ['relu4_2']
 # layers we used to represent style
 STYLE_LAYERS = ['relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1']
 # how important is the content of content image and that of the generated image being similar
-CONTENT_WEIGHT = 10
+CONTENT_WEIGHT = 1
 # how important is the style of style image and that of the generated image being similar
-STYLE_WEIGHT = 10000
+STYLE_WEIGHT = 1000
 
 NUM_STEPS = 500
 
@@ -208,10 +208,10 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
       style_score += sl.backward()
 
     run[0] += 1
-    # if run[0] % 20 == 0:
-    logging.info("run {}:".format(run))
-    logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
-      style_score.data[0], content_score.data[0]))
+    if run[0] % 20 == 0:
+      logging.info("run {}:".format(run))
+      logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
+        style_score.data[0], content_score.data[0]))
 
 
     return content_score + style_score
