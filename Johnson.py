@@ -54,6 +54,15 @@ def image_loader(image_name, height=None, width=None):
     image = toTensor(image.resize((width, height)))
   return image
 
+def normalize_images(images):
+  # normalize using imagenet mean and std
+  mean = images.data.new(images.data.size())
+  std = images.data.new(images.data.size())
+  for i in range(3):
+    mean[:, i, :, :] = MEAN_IMAGE[i]
+    std[:, i, :, :] = STD_IMAGE[i]
+  return (images - Variable(mean)) / Variable(std)
+
 class LossNetwork(torch.nn.Module):
   ''' Module based on pre-trained VGG 19 for extracting high level features of image '''
   def __init__(self):
@@ -183,7 +192,7 @@ class UpsampleConvLayer(torch.nn.Module):
     return y
 
 def train(args):
-  print('\tStart training', flush=True)
+  print('Start training', flush=True)
   # np.random.seed(args.seed)
   # torch.manual_seed(args.seed)
   #
@@ -194,8 +203,7 @@ def train(args):
   transform = transforms.Compose([
     transforms.Scale(args.image_size),
     transforms.CenterCrop(args.image_size),
-    transforms.ToTensor(),
-    transforms.Normalize(MEAN_IMAGE, STD_IMAGE)
+    transforms.ToTensor()
   ])
   train_dataset = datasets.ImageFolder(args.dataset, transform)
   train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
@@ -204,7 +212,7 @@ def train(args):
   style = style.repeat(args.batch_size, 1, 1, 1)
 
   # Networks
-  print('\tLoading networks', flush=True)
+  print('Loading networks', flush=True)
   transformer = TransformerNetwork()
   optimizer = Adam(transformer.parameters(), args.lr)
   mse_loss = torch.nn.MSELoss()
@@ -224,7 +232,7 @@ def train(args):
   target_gram_style = [gram_matrix(x) for x in features_style]
 
   for e in range(args.epochs):
-    print('\tStart epoch', str(e+1), flush=True)
+    print('Start epoch', str(e+1), flush=True)
     transformer.train()
     agg_content_loss = 0.0
     agg_style_loss = 0.0
@@ -235,15 +243,15 @@ def train(args):
 
       optimizer.zero_grad()
       x = Variable(x).type(dtype)
-
       y = transformer(x)
-      for i in range(size_batch):
-        y.data[i] = normaliseImage(y.data[i].clamp_(0,1))
+
+      x = normalize_images(x)
+      y = normalize_images(y)
 
       features_x = vgg(x)
       features_y = vgg(y)
 
-      content_loss = args.content_weight * mse_loss(features_y.relu2_2, features_x.relu2_2)
+      content_loss = args.content_weight * mse_loss(features_y.relu3_3, features_x.relu3_3)
 
       style_loss = 0.
       for ft_y, tg_s in zip(features_y, target_gram_style):
@@ -287,10 +295,10 @@ def train(args):
   save_model_path = os.path.join(args.save_model_dir, save_model_filename)
   torch.save(transformer.state_dict(), save_model_path)
 
-  print('\nDone, trained model saved at', save_model_path, flush=True)
+  print('Done, trained model saved at', save_model_path, flush=True)
 
 def stylize(args):
-  print('\tStart stylizing', flush=True)
+  print('Start stylizing', flush=True)
   content_image = image_loader(args.content_image).type(dtype)
   content_image = content_image.unsqueeze(0)
   content_image = Variable(content_image, volatile=True)
@@ -303,7 +311,7 @@ def stylize(args):
   output = style_model(content_image)
   output_data = output.data[0]
   utils.save_image(output_data, args.output_image)
-  print('\nDone stylization to', args.output_image, flush=True)
+  print('Done stylization to', args.output_image, flush=True)
 
 def main(args):
   if args.subcommand is None:

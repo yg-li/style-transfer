@@ -23,14 +23,19 @@ CONTENT_WEIGHT = 1
 # how important is the style of style image and that of the generated image being similar
 STYLE_WEIGHT = 1000
 
-NUM_STEPS = 300
+NUM_STEPS = 500
 
 # run on GPU
 use_cuda = torch.cuda.is_available()
 dtype = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 
+# Mean and Standard deviation of the Imagenet dataset
+MEAN_IMAGE = [0.485, 0.456, 0.406]
+
 # helpers
 toTensor = transforms.ToTensor()
+normaliseImage = transforms.Normalize(MEAN_IMAGE, [1,1,1])
+deNormaliseImage = transforms.Normalize([-x for x in MEAN_IMAGE], [1,1,1])
 
 def image_loader(image_name, height=None, width=None):
   """ helper for loading images
@@ -42,9 +47,9 @@ def image_loader(image_name, height=None, width=None):
   """
   image = Image.open(image_name)
   if height is None or width is None:
-    image = Variable(toTensor(image))
+    image = Variable(normaliseImage(toTensor(image)))
   else:
-    image = Variable(toTensor(image.resize((width, height))))
+    image = Variable(normaliseImage(toTensor(image.resize((width, height)))))
   image = image.unsqueeze(0) # make the tensor to be 4D so that VGG can process it
   return image
 
@@ -187,10 +192,8 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
   print('Transfering style..')
   run = [NUM_STEPS-num_steps]
   def closure():
-    # Normalised the value of input_img to be in [0,1]
-    input_param.data.clamp_(0, 1)
-
-    utils.save_image(input_param.data, output_dir + str(run[0]) + '.jpg')
+    if run[0] % 20 == 0:
+      utils.save_image(deNormaliseImage(input_param.data).clamp_(0, 1), output_dir + str(run[0]) + '.jpg')
 
     optimizer.zero_grad()
     model(input_param)
@@ -202,18 +205,18 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
     for sl in style_losses:
       style_score += sl.backward()
 
-    # if run[0] % 10 == 0:
-    logging.info("run {}:".format(run))
-    logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
-      style_score.data[0], content_score.data[0]))
     run[0] += 1
+    if run[0] % 20 == 0:
+      logging.info("run {}:".format(run))
+      logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
+        style_score.data[0], content_score.data[0]))
+
 
     return content_score + style_score
 
   optimizer.step(closure)
 
-  input_param.data.clamp_(0, 1)
-  return input_param.data
+  return deNormaliseImage(input_param.data).clamp_(0, 1)
 
 def main(args):
   num_steps = NUM_STEPS
@@ -229,7 +232,7 @@ def main(args):
   assert content_img.size() == style_img.size(), 'the content and style images should have the same size'
 
   # start transferring from content image
-  input_img = style_img.clone()  # Variable(torch.rand(content_img.size())).type(dtype)
+  input_img = content_img.clone()  # Variable(torch.rand(content_img.size())).type(dtype)
 
   # name of dir of output is (name_of_content_img + name_of_style_img)
   output_dir = os.getcwd() + '/images/output_images/' + \
@@ -266,8 +269,8 @@ def main(args):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument('content-image', help='name of content image', type=str)
-  parser.add_argument('style-image', help='name of style image', type=str)
+  parser.add_argument('content_image', help='name of content image', type=str)
+  parser.add_argument('style_image', help='name of style image', type=str)
   parser.add_argument('--style-to-content', help='the ratio of weights for style and content similarity', type=int)
 
   args = parser.parse_args()
