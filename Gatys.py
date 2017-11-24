@@ -24,6 +24,7 @@ CONTENT_WEIGHT = 1
 STYLE_WEIGHT = 1000
 
 NUM_STEPS = 500
+SHOW_STEPS = 20
 
 # run on GPU
 use_cuda = torch.cuda.is_available()
@@ -194,7 +195,7 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
   def closure():
     for i in range(3):
       input_param.data[0][i].clamp_(0-MEAN_IMAGE[i], 1-MEAN_IMAGE[i])
-    if run[0] % 20 == 0:
+    if run[0] % SHOW_STEPS == 0:
       utils.save_image(deNormaliseImage(copy.deepcopy(input_param.data[0])).clamp(0, 1), output_dir + str(run[0]) + '.jpg')
 
     optimizer.zero_grad()
@@ -208,7 +209,7 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
       style_score += sl.backward()
 
     run[0] += 1
-    if run[0] % 20 == 0:
+    if run[0] % SHOW_STEPS == 0:
       logging.info("run {}:".format(run))
       logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
         style_score.data[0], content_score.data[0]))
@@ -246,12 +247,12 @@ def main(args):
     return
   else: # start transferring from an intermediate stage
     files = os.listdir(output_dir)
-    for i in reversed(range(num_steps)):
-      if str(i)+'.jpg' in files:
+    for i in reversed(range(num_steps/SHOW_STEPS)):
+      if str(i*SHOW_STEPS)+'.jpg' in files:
         try:
-          input_img = image_loader(output_dir+str(i)+'.jpg', img_height, img_width).type(dtype)
-          num_steps -= i
-          print('Starting transferring from the', str(i), 'iteration')
+          input_img = image_loader(output_dir+str(i*SHOW_STEPS)+'.jpg', img_height, img_width).type(dtype)
+          num_steps -= i*SHOW_STEPS
+          print('Starting transferring from the', str(i*SHOW_STEPS), 'iteration')
           break
         except IOError:
           continue
