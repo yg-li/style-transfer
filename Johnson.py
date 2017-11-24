@@ -295,7 +295,7 @@ def train(args):
   save_model_path = os.path.join(args.save_model_dir, save_model_filename)
   torch.save(transformer.state_dict(), save_model_path)
 
-  print('Done, trained model saved at', save_model_path, flush=True)
+  print('Done, trained model saved at', save_model_path, '\n', flush=True)
 
 def stylize(args):
   print('Start stylizing', flush=True)
@@ -309,9 +309,8 @@ def stylize(args):
     style_model.cuda()
 
   output = style_model(content_image)
-  output_data = output.data[0]
-  utils.save_image(output_data, args.output_image)
-  print('Done stylization to', args.output_image, flush=True)
+  utils.save_image(output.data[0], args.output_image)
+  print('Done stylization to', args.output_image, '\n', flush=True)
 
 def main(args):
   if args.subcommand is None:

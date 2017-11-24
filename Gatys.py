@@ -19,9 +19,9 @@ CONTENT_LAYERS = ['relu4_2']
 # layers we used to represent style
 STYLE_LAYERS = ['relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1']
 # how important is the content of content image and that of the generated image being similar
-CONTENT_WEIGHT = 1
+CONTENT_WEIGHT = 10
 # how important is the style of style image and that of the generated image being similar
-STYLE_WEIGHT = 1000
+STYLE_WEIGHT = 10000
 
 NUM_STEPS = 500
 
@@ -192,8 +192,10 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
   print('Transfering style..')
   run = [NUM_STEPS-num_steps]
   def closure():
+    for i in range(3):
+      input_param.data[0][i].clamp_(0-MEAN_IMAGE[i], 1-MEAN_IMAGE[i])
     if run[0] % 20 == 0:
-      utils.save_image(deNormaliseImage(input_param.data).clamp_(0, 1), output_dir + str(run[0]) + '.jpg')
+      utils.save_image(deNormaliseImage(copy.deepcopy(input_param.data[0])).clamp(0, 1), output_dir + str(run[0]) + '.jpg')
 
     optimizer.zero_grad()
     model(input_param)
@@ -206,17 +208,17 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
       style_score += sl.backward()
 
     run[0] += 1
-    if run[0] % 20 == 0:
-      logging.info("run {}:".format(run))
-      logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
-        style_score.data[0], content_score.data[0]))
+    # if run[0] % 20 == 0:
+    logging.info("run {}:".format(run))
+    logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
+      style_score.data[0], content_score.data[0]))
 
 
     return content_score + style_score
 
   optimizer.step(closure)
 
-  return deNormaliseImage(input_param.data).clamp_(0, 1)
+  return deNormaliseImage(input_param.data[0]).clamp(0, 1)
 
 def main(args):
   num_steps = NUM_STEPS
@@ -264,6 +266,7 @@ def main(args):
   # transfer style
   output_img = run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_steps)
   utils.save_image(output_img, output_dir + 'result.jpg')
+  print('Done with transferring\n')
 
   logging.info("Transferring finished")
 
