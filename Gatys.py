@@ -187,11 +187,11 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
     output_dir: the path to the directory storing the output of style transfer
     num_steps: the maximum number of iterations for updating the generated image
   """
-  print('Building the style transfer model...')
+  print('Building the style transfer model...', flush=True)
   model, content_losses, style_losses = get_style_model_and_losses(vgg, content_img, style_img)
   input_param, optimizer = get_input_param_and_optimizer(input_img, num_steps)
 
-  print('Transfering style..')
+  print('Transfering style...', flush=True)
   run = [NUM_STEPS-num_steps]
   def closure():
     for i in range(3):
@@ -247,7 +247,7 @@ def main(args):
   if not os.path.exists(output_dir):
     os.mkdir(output_dir)
   elif 'result.jpg' in os.listdir(output_dir):
-    print('Already transferred')
+    print('Already transferred', flush=True)
     return
   else: # start transferring from an intermediate stage
     files = os.listdir(output_dir)
@@ -256,7 +256,7 @@ def main(args):
         try:
           input_img = image_loader(output_dir+str(i*SHOW_STEPS)+'.jpg', img_height, img_width).type(dtype)
           num_steps -= i*SHOW_STEPS
-          print('Starting transferring from the', str(i*SHOW_STEPS), 'iteration')
+          print('Starting transferring from the', str(i*SHOW_STEPS), 'iteration', flush=True)
           break
         except IOError:
           continue
@@ -271,7 +271,7 @@ def main(args):
   # transfer style
   output_img = run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_steps)
   utils.save_image(output_img, output_dir + 'result.jpg')
-  print('Done with transferring\n')
+  print('Done with transferring\n', flush=True)
 
   logging.info("Transferring finished")
 

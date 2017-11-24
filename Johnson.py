@@ -39,7 +39,7 @@ def check_paths(args):
     if args.checkpoint_dir is not None and not (os.path.exists(args.checkpoint_dir)):
       os.makedirs(args.checkpoint_dir)
   except OSError as e:
-    print(e)
+    print(e, flush=True)
     sys.exit(1)
 
 def image_loader(image_name, height=None, width=None):
