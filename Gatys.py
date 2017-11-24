@@ -22,6 +22,7 @@ STYLE_LAYERS = ['relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1']
 CONTENT_WEIGHT = 1
 # how important is the style of style image and that of the generated image being similar
 STYLE_WEIGHT = 1000
+TV_WEIGHT = 1e-6
 
 NUM_STEPS = 500
 SHOW_STEPS = 20
@@ -208,6 +209,9 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
     for sl in style_losses:
       style_score += sl.backward()
 
+    tv_score = TV_WEIGHT * (torch.sum(torch.abs(input_param[:,:,:,:-1]-input_param[:,:,:,1:])) +
+                            torch.sum(torch.abs(input_param[:,:,:-1,:]-input_param[:,:,1:,:])))
+
     run[0] += 1
     if run[0] % SHOW_STEPS == 0:
       logging.info("run {}:".format(run))
@@ -215,7 +219,7 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
         style_score.data[0], content_score.data[0]))
 
 
-    return content_score + style_score
+    return content_score + style_score + tv_score
 
   optimizer.step(closure)
 

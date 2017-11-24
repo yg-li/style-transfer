@@ -25,6 +25,8 @@ dtype = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 MEAN_IMAGE = [0.485, 0.456, 0.406]
 STD_IMAGE = [0.229, 0.224, 0.225]
 
+TV_WEIGHT = 1e-6
+
 # helpers
 toTensor = transforms.ToTensor()
 normaliseImage = transforms.Normalize(MEAN_IMAGE, STD_IMAGE)
@@ -251,6 +253,9 @@ def train(args):
       x = Variable(x).type(dtype)
       y = transformer(x)
 
+      tv_loss = TV_WEIGHT * (torch.sum(torch.abs(y[:,:,:,:-1]-y[:,:,:,1:])) +
+                             torch.sum(torch.abs(y[:,:,:-1,:]-y[:,:,1:,:])))
+
       x = normalize_images(x)
       y = normalize_images(y)
 
@@ -265,7 +270,7 @@ def train(args):
         style_loss += mse_loss(gm_y, tg_s[:size_batch, :, :])
       style_loss *= args.style_weight
 
-      total_loss = content_loss + style_loss
+      total_loss = content_loss + style_loss + tv_loss
       total_loss.backward()
       optimizer.step()
 
