@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import time
+import logging
 from collections import namedtuple
 
 from PIL import Image
@@ -52,9 +53,9 @@ def image_loader(image_name, height=None, width=None):
   '''
   image = Image.open(image_name)
   if height is None or width is None:
-    image = toTensor(image)
+    image = toTensor(image).type(dtype)
   else:
-    image = toTensor(image.resize((width, height)))
+    image = toTensor(image.resize((width, height))).type(dtype)
   return image
 
 def normalize_images(images):
@@ -278,12 +279,13 @@ def train(args):
       agg_style_loss += style_loss.data[0]
 
       if (batch_id + 1) % args.log_interval == 0:
-        print('{}\tEpoch {}:\t[{}/{}]\tcontent: {:.6f}\tstyle: {:.6f}\ttotal: {:.6f}'.format(
-          time.ctime(), e + 1, count, len(train_dataset),
-                        agg_content_loss / (batch_id + 1),
-                        agg_style_loss / (batch_id + 1),
-                        (agg_content_loss + agg_style_loss) / (batch_id + 1)
-        ), flush=True)
+        mesg = '{}\tEpoch {}:\t[{}/{}]\tcontent: {:.6f}\tstyle: {:.6f}\ttotal: {:.6f}'.format(
+                time.ctime(), e + 1, count, len(train_dataset),
+                agg_content_loss / (batch_id + 1),
+                agg_style_loss / (batch_id + 1),
+                (agg_content_loss + agg_style_loss) / (batch_id + 1))
+        logging.info(mesg)
+        print(mesg, flush=True)
 
       if args.checkpoint_dir is not None and (batch_id + 1) % args.checkpoint_interval == 0:
         transformer.eval()
@@ -327,6 +329,8 @@ def main(args):
   if args.subcommand is None:
     print('ERROR: specify either train or eval', flush=True)
     sys.exit(1)
+
+  logging.basicConfig(filename=args.checkpoint_dir + '/log', level=logging.DEBUG)
 
   if args.subcommand == 'train':
     check_paths(args)
