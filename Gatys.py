@@ -251,7 +251,7 @@ def main(args):
     return
   else: # start transferring from an intermediate stage
     files = os.listdir(output_dir)
-    for i in reversed(range(num_steps/SHOW_STEPS)):
+    for i in reversed(range(int(num_steps/SHOW_STEPS))):
       if str(i*SHOW_STEPS)+'.jpg' in files:
         try:
           input_img = image_loader(output_dir+str(i*SHOW_STEPS)+'.jpg', img_height, img_width).type(dtype)
