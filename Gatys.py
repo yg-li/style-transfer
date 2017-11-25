@@ -77,11 +77,11 @@ class GramMatrix(nn.Module):
   def forward(self, input):
     b, c, h, w = input.size()
 
-    features = input.view(b * c, h * w)
+    features = input.view(b, c, h * w)
 
-    G = torch.mm(features, features.t())  # compute the gram matrix
+    G = torch.bmm(features, features.transpose(1,2))  # compute the gram matrix
 
-    return G.div(b * c * h * w)
+    return G.div(c * h * w)
 
 class StyleLoss(nn.Module):
   """ the module helps to compute the style loss at a layer """
@@ -115,6 +115,8 @@ def get_style_model_and_losses(vgg, content_img, style_img):
       style_losses: the list of modules for computing style loss
   """
   vgg = copy.deepcopy(vgg)
+  # for param in vgg.parameters():
+  #   param.requires_grad = False
 
   content_losses = []
   style_losses = []
@@ -174,10 +176,10 @@ def get_input_param_and_optimizer(input_img, max_iter=300):
   """
   # input_img is a parameter that needs to be updated
   input_param = nn.Parameter(input_img.data)
-  optimizer = optim.LBFGS([input_param], max_iter=max_iter)
+  optimizer = optim.LBFGS([input_param])
   return input_param, optimizer
 
-def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_steps=300):
+def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_steps=500):
   """ the main method for doing the style transfer
   Args:
     vgg: the feature component of a pre-trained VGG-19 network
@@ -193,35 +195,36 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
 
   print('Transfering style...', flush=True)
   run = [NUM_STEPS-num_steps]
-  def closure():
-    for i in range(3):
-      input_param.data[0][i].clamp_(0-MEAN_IMAGE[i], 1-MEAN_IMAGE[i])
-    if run[0] % SHOW_STEPS == 0:
-      utils.save_image(deNormaliseImage(copy.deepcopy(input_param.data[0])).clamp(0, 1), output_dir + str(run[0]) + '.jpg')
+  while run[0] < NUM_STEPS:
+    def closure():
+      for i in range(3):
+        input_param.data[0][i].clamp_(0-MEAN_IMAGE[i], 1-MEAN_IMAGE[i])
+      if run[0] % SHOW_STEPS == 0:
+        utils.save_image(deNormaliseImage(copy.deepcopy(input_param.data[0])).clamp(0, 1), output_dir + str(run[0]) + '.jpg')
 
-    optimizer.zero_grad()
-    model(input_param)
-    style_score = 0
-    content_score = 0
+      optimizer.zero_grad()
+      model(input_param)
+      style_score = 0
+      content_score = 0
 
-    for cl in content_losses:
-      content_score += cl.backward()
-    for sl in style_losses:
-      style_score += sl.backward()
+      for cl in content_losses:
+        content_score += cl.backward()
+      for sl in style_losses:
+        style_score += sl.backward()
 
-    tv_score = TV_WEIGHT * (torch.sum(torch.abs(input_param[:,:,:,:-1]-input_param[:,:,:,1:])) +
-                            torch.sum(torch.abs(input_param[:,:,:-1,:]-input_param[:,:,1:,:])))
+      tv_score = TV_WEIGHT * (torch.sum(torch.abs(input_param[:,:,:,:-1]-input_param[:,:,:,1:])) +
+                              torch.sum(torch.abs(input_param[:,:,:-1,:]-input_param[:,:,1:,:])))
 
-    run[0] += 1
-    if run[0] % SHOW_STEPS == 0:
-      logging.info("run {}:".format(run))
-      logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
-        style_score.data[0], content_score.data[0]))
+      run[0] += 1
+      if run[0] % SHOW_STEPS == 0:
+        logging.info("run {}:".format(run))
+        logging.info('Style Loss : {:4f} Content Loss: {:4f}'.format(
+          style_score.data[0], content_score.data[0]))
 
 
-    return content_score + style_score + tv_score
+      return content_score + style_score + tv_score
 
-  optimizer.step(closure)
+    optimizer.step(closure)
 
   return deNormaliseImage(input_param.data[0]).clamp(0, 1)
 
@@ -239,7 +242,7 @@ def main(args):
   assert content_img.size() == style_img.size(), 'the content and style images should have the same size'
 
   # start transferring from content image
-  input_img = content_img.clone()  # Variable(torch.rand(content_img.size())).type(dtype)
+  input_img = Variable(torch.randn(content_img.size())).type(dtype) # content_img.clone()
 
   # name of dir of output is (name_of_content_img + name_of_style_img)
   output_dir = os.getcwd() + '/images/output_images/' + \
@@ -247,7 +250,7 @@ def main(args):
   if not os.path.exists(output_dir):
     os.mkdir(output_dir)
   elif 'result.jpg' in os.listdir(output_dir):
-    print('Already transferred', flush=True)
+    print('Already transferred\n', flush=True)
     return
   else: # start transferring from an intermediate stage
     files = os.listdir(output_dir)
