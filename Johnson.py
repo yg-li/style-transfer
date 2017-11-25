@@ -349,7 +349,7 @@ if __name__ == '__main__':
                                 help='path to style-image')
   train_parser.add_argument('--save-model-dir', type=str, required=True,
                                 help='path to folder where trained model will be saved.')
-  train_parser.add_argument('--checkpoint-dir', type=str, default=None,
+  train_parser.add_argument('--checkpoint-dir', type=str, required=True,
                                 help='path to folder where checkpoints of trained models will be saved')
   train_parser.add_argument('--image-size', type=int, default=256,
                                 help='size of training images, default is 256 X 256')
