@@ -2,7 +2,6 @@ import os
 import argparse
 import copy
 import logging
-from collections import namedtuple
 
 import torch
 from torch.autograd import Variable
@@ -26,7 +25,7 @@ STYLE_WEIGHT = 1000
 TV_WEIGHT = 1e-6
 
 NUM_STEPS = 500
-SHOW_STEPS = 1
+SHOW_STEPS = 20
 
 # run on GPU
 use_cuda = torch.cuda.is_available()
@@ -56,58 +55,129 @@ def image_loader(image_name, height=None, width=None):
   image = image.unsqueeze(0) # make the tensor to be 4D so that VGG can process it
   return image
 
-class LossNetwork(torch.nn.Module):
-  ''' Module based on pre-trained VGG 19 for extracting high level features of image
-    Use relu3_3 for content representation
-    Use relu1_2, relu2_2, relu3_3, and relu4_3 for style representation
-  '''
-  def __init__(self):
-    super(LossNetwork, self).__init__()
-    vgg = models.vgg19(pretrained=True).features
-    self.slice1 = torch.nn.Sequential()
-    self.slice2 = torch.nn.Sequential()
-    self.slice3 = torch.nn.Sequential()
-    self.slice4 = torch.nn.Sequential()
-    self.slice5 = torch.nn.Sequential()
-    self.slice6 = torch.nn.Sequential()
-    for x in range(2):
-      self.slice1.add_module(str(x), vgg[x])
-    for x in range(2, 7):
-      self.slice2.add_module(str(x), vgg[x])
-    for x in range(7, 12):
-      self.slice3.add_module(str(x), vgg[x])
-    for x in range(12, 21):
-      self.slice4.add_module(str(x), vgg[x])
-    for x in range(21,23):
-      self.slice5.add_module(str(x), vgg[x])
-    for x in range(23, 30):
-      self.slice6.add_module(str(x), vgg[x])
-    for param in self.parameters():
-      param.requires_grad = False
+class ContentLoss(nn.Module):
+  """ the module helps to compute the content loss """
+  def __init__(self, target, weight):
+    super(ContentLoss,self).__init__()
+    self.target = target.detach() * weight
+    self.weight = weight
+    self.criterion = nn.MSELoss()
 
-  def forward(self, x):
-    style_out = []
-    y = self.slice1(x)
-    style_out.append(y)
-    y = self.slice2(y)
-    style_out.append(y)
-    y = self.slice3(y)
-    style_out.append(y)
-    y = self.slice4(y)
-    style_out.append(y)
-    y = self.slice5(y)
-    content_out = y
-    y = self.slice6(y)
-    style_out.append(y)
+  def forward(self, input):
+    self.loss = self.criterion(input * self.weight, self.target)
+    self.output = input
+    return self.output
 
-    return content_out, style_out
+  def backward(self, retain_graph=True):
+    self.loss.backward(retain_graph=retain_graph)
+    return self.loss
 
-def gram_matrix(input):
-  """ Compute batch-wise gram matrices """
-  (b, ch, h, w) = input.size()
-  features = input.view(b, ch, w * h)
-  G = features.bmm(features.transpose(1,2))
-  return G / (ch * h * w)
+class GramMatrix(nn.Module):
+  """ module for computing gram matrix of a layer of activations """
+  def forward(self, input):
+    b, c, h, w = input.size()
+
+    features = input.view(b, c, h * w)
+
+    G = torch.bmm(features, features.transpose(1,2))  # compute the gram matrix
+
+    return G.div(c * h * w)
+
+class StyleLoss(nn.Module):
+  """ the module helps to compute the style loss at a layer """
+  def __init__(self, target, weight):
+    super(StyleLoss,self).__init__()
+    self.target = target.detach() * weight
+    self.weight = weight
+    self.gram = GramMatrix()
+    self.criterion = nn.MSELoss()
+
+  def forward(self, input):
+    self.output = input.clone()
+    self.G = self.gram(input)
+    self.G.mul_(self.weight)
+    self.loss = self.criterion(self.G, self.target)
+    return self.output
+
+  def backward(self, retain_graph=True):
+    self.loss.backward(retain_graph=retain_graph)
+    return self.loss
+
+def get_style_model_and_losses(vgg, content_img, style_img):
+  """ constructs the model for style transfer as well as the losses
+    Args:
+      vgg: the feature component of a pre-trained VGG-19 network
+      content_img: the content image
+      style_img: the style image
+    Returns:
+      model: the style model
+      content_losses: the list of modules for computing content loss
+      style_losses: the list of modules for computing style loss
+  """
+  vgg = copy.deepcopy(vgg)
+  # for param in vgg.parameters():
+  #   param.requires_grad = False
+
+  content_losses = []
+  style_losses = []
+
+  model = nn.Sequential()  # the new model
+  gram = GramMatrix()  # for computing the style targets
+
+  if use_cuda:
+    model = model.cuda()
+    gram = gram.cuda()
+
+  i = j = 1
+  for layer in list(vgg):
+    if isinstance(layer, nn.Conv2d):
+      name = 'conv' + str(i) + '_' + str(j)
+      model.add_module(name, layer)
+
+    if isinstance(layer, nn.ReLU):
+      name = 'relu' + str(i) + '_' + str(j)
+      model.add_module(name, layer)
+
+      if name in CONTENT_LAYERS:
+        # add content loss:
+        target = model(content_img).clone()
+        content_loss = ContentLoss(target, CONTENT_WEIGHT)
+        model.add_module('content_loss_' + str(i) + '_' + str(j), content_loss)
+        content_losses.append(content_loss)
+
+      if name in STYLE_LAYERS:
+        # add style loss:
+        target = model(style_img).clone()
+        target_gram = gram(target)
+        style_loss = StyleLoss(target_gram, STYLE_WEIGHT)
+        model.add_module('style_loss_' + str(i) + '_' + str(j), style_loss)
+        style_losses.append(style_loss)
+
+      j += 1
+
+    if isinstance(layer, nn.MaxPool2d):
+      name = 'avg_pool_' + str(i)
+      avgpool = nn.AvgPool2d(kernel_size=layer.kernel_size,
+                              stride=layer.stride, padding = layer.padding)
+      model.add_module(name,avgpool)
+      i += 1
+      j = 1
+
+  return model, content_losses, style_losses
+
+def get_input_param_and_optimizer(input_img, max_iter=300):
+  """ produce the input parameter (the generated image) and the optimizer
+  Args:
+    input_img: the initial generated image
+    max_iter: the maximum number of iterations
+  Returns:
+    input_param: a parameter has the data of input_img
+    optimizer: an L-BFGS optimizer
+  """
+  # input_img is a parameter that needs to be updated
+  input_param = nn.Parameter(input_img.data)
+  optimizer = optim.LBFGS([input_param])
+  return input_param, optimizer
 
 def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_steps=500):
   """ the main method for doing the style transfer
@@ -120,17 +190,8 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
     num_steps: the maximum number of iterations for updating the generated image
   """
   print('Building the style transfer model...', flush=True)
-  input_param = nn.Parameter(input_img.data).type(dtype)
-  optimizer = optim.LBFGS([input_param])
-  model = LossNetwork()
-  if use_cuda:
-    model.cuda()
-
-  content_target, style_out = model(content_img)
-  content_target = content_target.detach()
-  style_target = [gram_matrix(x.detach()) for x in style_out]
-
-  mse_loss = torch.nn.MSELoss()
+  model, content_losses, style_losses = get_style_model_and_losses(vgg, content_img, style_img)
+  input_param, optimizer = get_input_param_and_optimizer(input_img, num_steps)
 
   print('Transfering style...', flush=True)
   run = [NUM_STEPS-num_steps]
@@ -142,29 +203,28 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
         utils.save_image(deNormaliseImage(copy.deepcopy(input_param.data[0])).clamp(0, 1), output_dir + str(run[0]) + '.jpg')
 
       optimizer.zero_grad()
-      content_out, style_out = model(input_param)
-      style_loss = 0.
+      model(input_param)
+      style_score = 0
+      content_score = 0
 
-      content_loss = CONTENT_WEIGHT * mse_loss(content_out, content_target)
-      for so, tg_s in zip(style_out, style_target):
-        gm_s = gram_matrix(so)
-        style_loss += mse_loss(gm_s, tg_s)
-      style_loss *= STYLE_WEIGHT
+      for cl in content_losses:
+        content_score += cl.backward()
+      for sl in style_losses:
+        style_score += sl.backward()
 
-      tv_loss = TV_WEIGHT * (torch.sum(torch.abs(input_param[:,:,:,:-1]-input_param[:,:,:,1:])) +
+      tv_score = TV_WEIGHT * (torch.sum(torch.abs(input_param[:,:,:,:-1]-input_param[:,:,:,1:])) +
                               torch.sum(torch.abs(input_param[:,:,:-1,:]-input_param[:,:,1:,:])))
-
-      total_loss = content_loss + style_loss + tv_loss
-      total_loss.backward()
+      tv_score.backward()
 
       run[0] += 1
       if run[0] % SHOW_STEPS == 0:
         logging.info("run {}:".format(run))
-        mesg = 'Style Loss : {:4f} Content Loss: {:4f}'.format(style_loss.data[0], content_loss.data[0])
+        mesg = 'Style Loss : {:4f} Content Loss: {:4f}'.format(style_score.data[0], content_score.data[0])
         logging.info(mesg)
         print(mesg, flush=True)
 
-      return total_loss
+
+      return content_score + style_score + tv_score
 
     optimizer.step(closure)
 
