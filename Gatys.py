@@ -218,8 +218,7 @@ def run_style_transfer(vgg, content_img, style_img, input_img, output_dir, num_s
 
       run[0] += 1
       if run[0] % SHOW_STEPS == 0:
-        logging.info("run {}:".format(run))
-        mesg = 'Style Loss : {:4f} Content Loss: {:4f}'.format(style_score.data[0], content_score.data[0])
+        mesg = 'run {}:\nStyle Loss : {:4f} Content Loss: {:4f}'.format(run[0], style_score.data[0], content_score.data[0])
         logging.info(mesg)
         print(mesg, flush=True)
 
