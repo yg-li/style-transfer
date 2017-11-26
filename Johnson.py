@@ -243,7 +243,7 @@ def train(args):
   e_has = 0
   batch_has = 0
   checkpoints = os.listdir(args.checkpoint_dir)
-  if not checkpoints:
+  if checkpoints:
     if 'log' in checkpoints:
       checkpoints.remove('log')
     if '.DS_Store' in checkpoints:
