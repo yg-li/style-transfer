@@ -243,9 +243,11 @@ def train(args):
   e_has = 0
   batch_has = 0
   checkpoints = os.listdir(args.checkpoint_dir)
-  if checkpoints is not None:
-    checkpoints.remove('log')
-    checkpoints.remove('.DS_Store')
+  if not checkpoints:
+    if 'log' in checkpoints:
+      checkpoints.remove('log')
+    if '.DS_Store' in checkpoints:
+      checkpoints.remove('.DS_Store')
     for f in checkpoints:
       if int(f.split('.')[0].split('_')[0]) > e_has:
         e_has = int(f.split('.')[0].split('_')[0])
@@ -352,10 +354,9 @@ def main(args):
     print('ERROR: specify either train or eval', flush=True)
     sys.exit(1)
 
-  logging.basicConfig(filename=args.checkpoint_dir + '/log', level=logging.DEBUG)
-
   if args.subcommand == 'train':
     check_paths(args)
+    logging.basicConfig(filename=args.checkpoint_dir + '/log', level=logging.DEBUG)
     train(args)
   else:
     stylize(args)
