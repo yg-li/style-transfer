@@ -37,7 +37,7 @@ def check_paths(args):
   try:
     if not os.path.exists(args.save_model_dir):
       os.makedirs(args.save_model_dir)
-    if args.checkpoint_dir is not None and not (os.path.exists(args.checkpoint_dir)):
+    if not (os.path.exists(args.checkpoint_dir)):
       os.makedirs(args.checkpoint_dir)
   except OSError as e:
     print(e, flush=True)
@@ -236,17 +236,38 @@ def train(args):
     transformer.cuda()
     vgg.cuda()
 
-  # Target of style
+  # # Target of style
   features_style = vgg(style)
   target_gram_style = [gram_matrix(x) for x in features_style]
 
+  e_has = 0
+  batch_has = 0
+  checkpoints = os.listdir(args.checkpoint_dir)
+  if checkpoints is not None:
+    checkpoints.remove('log')
+    checkpoints.remove('.DS_Store')
+    for f in checkpoints:
+      if int(f.split('.')[0].split('_')[0]) > e_has:
+        e_has = int(f.split('.')[0].split('_')[0])
+    for f in checkpoints:
+      if int(f.split('.')[0].split('_')[0]) == e_has and int(f.split('.')[0].split('_')[1]) > batch_has:
+       batch_has = int(f.split('.')[0].split('_')[1])
+    print('e_has:', str(e_has), 'batch_has:', str(batch_has))
+
+    transformer.load_state_dict(torch.load(args.checkpoint_dir + '/' + str(e_has) + '_' + str(batch_has) + '.pth'))
+
   for e in range(args.epochs):
+    if e < e_has:
+      print('Epoch', str(e+1), 'has already trained', flush=True)
+      continue
     print('Start epoch', str(e+1), flush=True)
     transformer.train()
     agg_content_loss = 0.0
     agg_style_loss = 0.0
     count = 0
     for batch_id, (x, _) in enumerate(train_loader):
+      if batch_id < batch_has:
+        continue
       size_batch = len(x)
       count += size_batch
 
@@ -279,11 +300,12 @@ def train(args):
       agg_style_loss += style_loss.data[0]
 
       if (batch_id + 1) % args.log_interval == 0:
-        mesg = '{}\tEpoch {}:\t[{}/{}]\tcontent: {:.6f}\tstyle: {:.6f}\ttotal: {:.6f}'.format(
+        mesg = '{}\tEpoch {}:\t[{}/{}]\tcontent: {:.6f}\tstyle: {:.6f}\ttotal: {:.6f}\tbatch: {}'.format(
                 time.ctime(), e + 1, count, len(train_dataset),
                 agg_content_loss / (batch_id + 1),
                 agg_style_loss / (batch_id + 1),
-                (agg_content_loss + agg_style_loss) / (batch_id + 1))
+                (agg_content_loss + agg_style_loss) / (batch_id + 1),
+                batch_id + 1)
         logging.info(mesg)
         print(mesg, flush=True)
 
@@ -291,7 +313,7 @@ def train(args):
         transformer.eval()
         if use_cuda:
           transformer.cpu()
-        ckpt_model_filename = 'ckpt_epoch_' + str(e) + '_batch_id_' + str(batch_id + 1) + '.pth'
+        ckpt_model_filename = str(e) + '_' + str(batch_id + 1) + '.pth'
         ckpt_model_path = os.path.join(args.checkpoint_dir, ckpt_model_filename)
         torch.save(transformer.state_dict(), ckpt_model_path)
         if use_cuda:
