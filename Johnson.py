@@ -37,7 +37,7 @@ def check_paths(args):
   try:
     if not os.path.exists(args.save_model_dir):
       os.makedirs(args.save_model_dir)
-    if not (os.path.exists(args.checkpoint_dir)):
+    if not os.path.exists(args.checkpoint_dir):
       os.makedirs(args.checkpoint_dir)
   except OSError as e:
     print(e, flush=True)
@@ -106,7 +106,7 @@ class LossNetwork(torch.nn.Module):
 
 def gram_matrix(input):
   """ Compute batch-wise gram matrices """
-  (b, ch, h, w) = input.size()
+  b, ch, h, w = input.size()
   features = input.view(b, ch, w * h)
   G = features.bmm(features.transpose(1,2))
   return G / (ch * h * w)
@@ -226,6 +226,24 @@ def train(args):
   optimizer = Adam(transformer.parameters(), args.lr)
   mse_loss = torch.nn.MSELoss()
 
+  e_has = 0
+  batch_has = 0
+  checkpoints = os.listdir(args.checkpoint_dir)
+  if checkpoints:
+    if 'log' in checkpoints:
+      checkpoints.remove('log')
+    if '.DS_Store' in checkpoints:
+      checkpoints.remove('.DS_Store')
+    for f in checkpoints:
+      if int(f.split('.')[0].split('_')[0]) > e_has:
+        e_has = int(f.split('.')[0].split('_')[0])
+    for f in checkpoints:
+      if int(f.split('.')[0].split('_')[0]) == e_has and int(f.split('.')[0].split('_')[1]) > batch_has:
+        batch_has = int(f.split('.')[0].split('_')[1])
+    print('e_has:', str(e_has), 'batch_has:', str(batch_has))
+
+    transformer.load_state_dict(torch.load(args.checkpoint_dir + '/' + str(e_has) + '_' + str(batch_has) + '.pth'))
+
   vgg = LossNetwork()
 
   if torch.cuda.device_count() > 1:
@@ -240,24 +258,6 @@ def train(args):
   features_style = vgg(style)
   target_gram_style = [gram_matrix(x) for x in features_style]
 
-  e_has = 0
-  batch_has = 0
-  checkpoints = os.listdir(args.checkpoint_dir)
-  if checkpoints:
-    if 'log' in checkpoints:
-      checkpoints.remove('log')
-    if '.DS_Store' in checkpoints:
-      checkpoints.remove('.DS_Store')
-    for f in checkpoints:
-      if int(f.split('.')[0].split('_')[0]) > e_has:
-        e_has = int(f.split('.')[0].split('_')[0])
-    for f in checkpoints:
-      if int(f.split('.')[0].split('_')[0]) == e_has and int(f.split('.')[0].split('_')[1]) > batch_has:
-       batch_has = int(f.split('.')[0].split('_')[1])
-    print('e_has:', str(e_has), 'batch_has:', str(batch_has))
-
-    transformer.load_state_dict(torch.load(args.checkpoint_dir + '/' + str(e_has) + '_' + str(batch_has) + '.pth'))
-
   for e in range(args.epochs):
     if e < e_has:
       print('Epoch', str(e+1), 'has already trained', flush=True)
@@ -269,7 +269,11 @@ def train(args):
     count = 0
     for batch_id, (x, _) in enumerate(train_loader):
       if batch_id < batch_has:
+        count += len(x)
+        if (batch_id+1) % args.log_interval == 0:
+          print('Skipping through batch' , str(batch_id + 1), flush=True)
         continue
+      batch_has = 0
       size_batch = len(x)
       count += size_batch
 
@@ -304,12 +308,14 @@ def train(args):
       if (batch_id + 1) % args.log_interval == 0:
         mesg = '{}\tEpoch {}:\t[{}/{}]\tcontent: {:.6f}\tstyle: {:.6f}\ttotal: {:.6f}\tbatch: {}'.format(
                 time.ctime(), e + 1, count, len(train_dataset),
-                agg_content_loss / (batch_id + 1),
-                agg_style_loss / (batch_id + 1),
-                (agg_content_loss + agg_style_loss) / (batch_id + 1),
+                agg_content_loss / args.log_interval,
+                agg_style_loss / args.log_interval,
+                (agg_content_loss + agg_style_loss) / args.log_interval,
                 batch_id + 1)
         logging.info(mesg)
         print(mesg, flush=True)
+        agg_content_loss = 0.
+        agg_style_loss = 0.
 
       if args.checkpoint_dir is not None and (batch_id + 1) % args.checkpoint_interval == 0:
         transformer.eval()
