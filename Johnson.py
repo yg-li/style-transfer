@@ -229,7 +229,7 @@ def train(args):
   e_has = 0
   batch_has = 0
   checkpoints = os.listdir(args.checkpoint_dir)
-  if checkpoints:
+  if len(checkpoints) > 0:
     if 'log' in checkpoints:
       checkpoints.remove('log')
     if '.DS_Store' in checkpoints:
@@ -242,7 +242,8 @@ def train(args):
         batch_has = int(f.split('.')[0].split('_')[1])
     print('e_has:', str(e_has), 'batch_has:', str(batch_has))
 
-    transformer.load_state_dict(torch.load(args.checkpoint_dir + '/' + str(e_has) + '_' + str(batch_has) + '.pth'))
+    if e_has != 0 or batch_has != 0:
+      transformer.load_state_dict(torch.load(args.checkpoint_dir + '/' + str(e_has) + '_' + str(batch_has) + '.pth'))
 
   vgg = LossNetwork()
 
@@ -362,6 +363,9 @@ def main(args):
 
   if args.subcommand == 'train':
     check_paths(args)
+    if (args.style_image.split('/')[-1]).split('.')[0] + '.model' in os.listdir(args.save_model_dir):
+      print('Already trained for this style\n', flush=True)
+      return
     logging.basicConfig(filename=args.checkpoint_dir + '/log', level=logging.DEBUG)
     train(args)
   else:
