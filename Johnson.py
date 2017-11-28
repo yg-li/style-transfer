@@ -43,7 +43,7 @@ def check_paths(args):
     print(e, flush=True)
     sys.exit(1)
 
-def image_loader(image_name, height=None, width=None):
+def image_loader(image_name, scale=None):
   ''' helper for loading images
   Args:
     image_name: the path to the image
@@ -52,10 +52,11 @@ def image_loader(image_name, height=None, width=None):
     image: the Tensor representing the image loaded (value in [0,1])
   '''
   image = Image.open(image_name)
-  if height is None or width is None:
+  if scale is None:
     image = toTensor(image).type(dtype)
   else:
-    image = toTensor(image.resize((width, height))).type(dtype)
+    cutImage = transforms.Scale(scale)
+    image = toTensor(cutImage(image)).type(dtype)
   return image
 
 def normalize_images(images):
@@ -134,8 +135,10 @@ class TransformerNetwork(torch.nn.Module):
     self.deconv2 = UpsampleConvLayer(64, 32, kernel_size=3, stride=1, upsample=2)
     self.in5 = torch.nn.InstanceNorm2d(32, affine=True)
     self.deconv3 = ConvLayer(32, 3, kernel_size=9, stride=1)
+    self.in6 = torch.nn.InstanceNorm2d(3, affine=True)
     # Non-linearities
     self.relu = torch.nn.ReLU()
+    self.tanh = torch.nn.Tanh()
 
   def forward(self, x):
     y = self.relu(self.in1(self.conv1(x)))
@@ -148,8 +151,9 @@ class TransformerNetwork(torch.nn.Module):
     y = self.res5(y)
     y = self.relu(self.in4(self.deconv1(y)))
     y = self.relu(self.in5(self.deconv2(y)))
-    y = self.deconv3(y)
-    return y
+    y = self.tanh(self.in6(self.deconv3(y)))
+    ones = Variable(torch.ones(y.size()).type(dtype))
+    return (y + ones) / (ones + ones)
 
 class ConvLayer(torch.nn.Module):
   ''' Module representing a convolutional layer which preserves the size of input '''
@@ -217,9 +221,6 @@ def train(args):
   train_dataset = datasets.ImageFolder(args.dataset, transform)
   train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
 
-  style = Variable(normaliseImage(image_loader(args.style_image))).type(dtype)
-  style = style.repeat(args.batch_size, 1, 1, 1)
-
   # Networks
   print('Loading networks', flush=True)
   transformer = TransformerNetwork()
@@ -255,7 +256,9 @@ def train(args):
     transformer.cuda()
     vgg.cuda()
 
-  # # Target of style
+  # Target of style
+  style = Variable(normaliseImage(image_loader(args.style_image, 512))).type(dtype)
+  style = style.repeat(args.batch_size, 1, 1, 1)
   features_style = vgg(style)
   target_gram_style = [gram_matrix(x) for x in features_style]
 
@@ -366,7 +369,7 @@ def main(args):
     if (args.style_image.split('/')[-1]).split('.')[0] + '.model' in os.listdir(args.save_model_dir):
       print('Already trained for this style\n', flush=True)
       return
-    logging.basicConfig(filename=args.checkpoint_dir + '/log', level=logging.DEBUG)
+    logging.basicConfig(filename=args.checkpoint_dir + '/log', level=logging.INFO)
     train(args)
   else:
     stylize(args)
