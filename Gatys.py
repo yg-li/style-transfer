@@ -44,11 +44,11 @@ def image_loader(image_name, height=None, width=None):
   """
   image = Image.open(image_name)
   if height is None or width is None:
-    image = Variable(normaliseImage(toTensor(image))).type(dtype)
+    image = Variable(normaliseImage(toTensor(image)))
   else:
-    image = Variable(normaliseImage(toTensor(image.resize((width, height))))).type(dtype)
+    image = Variable(normaliseImage(toTensor(image.resize((width, height)))))
   image = image.unsqueeze(0) # make the tensor to be 4D so that VGG can process it
-  return image
+  return image.type(dtype)
 
 class LossNet(nn.Module):
   def __init__(self):
@@ -205,6 +205,7 @@ def main(args):
 
   # start logging
   logging.basicConfig(filename=output_dir + 'log', level=logging.INFO)
+  logging.info('Style weight:', str(STYLE_WEIGHT), 'Content Weight', str(CONTENT_WEIGHT))
 
   # transfer style
   output_img = transfer(content_img, style_img, input_img, output_dir, num_steps)

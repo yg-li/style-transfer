@@ -53,13 +53,13 @@ def image_loader(image_name, scale=None, transform=None):
   '''
   image = Image.open(image_name)
   if transform is not None:
-    image = toTensor(transform(image)).type(dtype)
+    image = toTensor(transform(image))
   elif scale is not None:
     cutImage = transforms.Scale(scale)
-    image = toTensor(cutImage(image)).type(dtype)
+    image = toTensor(cutImage(image))
   else:
-    image = toTensor(image).type(dtype)
-  return image
+    image = toTensor(image)
+  return image.type(dtype)
 
 def normalize_images(images):
   """ Normalised a batch of images wrt the Imagenet dataset """
@@ -330,6 +330,7 @@ def main(args):
       print('Already trained for this style\n', flush=True)
       return
     logging.basicConfig(filename=args.checkpoint_dir + '/log', level=logging.INFO)
+    logging('Content weight', str(args.content_weight), 'Style weight', str(args.style_weight))
     train(args)
   else:
     stylize(args)
