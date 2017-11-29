@@ -17,7 +17,7 @@ from PIL import Image
 # how important is the content of content image and that of the generated image being similar
 CONTENT_WEIGHT = 5
 # how important is the style of style image and that of the generated image being similar
-STYLE_WEIGHT = 1000
+STYLE_WEIGHT = 500
 TV_WEIGHT = 1e-6
 
 NUM_STEPS = 500
@@ -177,7 +177,7 @@ def main(args):
   # load images
   content_img = image_loader(os.getcwd() + '/images/content_images/' + args.content_image)
   _, _, img_height, img_width = content_img.size()
-  style_img = image_loader(os.getcwd() + '/images/style_images/' + args.style_image, img_height, img_width).type(dtype)
+  style_img = image_loader(os.getcwd() + '/images/style_images/' + args.style_image, img_height, img_width)
   assert content_img.size() == style_img.size(), 'the content and style images should have the same size'
 
   # start transferring from content image
