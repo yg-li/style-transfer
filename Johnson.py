@@ -110,9 +110,9 @@ class LossNetwork(torch.nn.Module):
 def gram_matrix(input):
   """ Compute batch-wise gram matrices """
   b, ch, h, w = input.size()
-  features = input.view(b, ch, w * h)
+  features = input.view(b, ch, h * w)
   G = features.bmm(features.transpose(1,2))
-  return G / (ch * h * w)
+  return G / (h * w)
 
 class TransformerNetwork(torch.nn.Module):
   ''' Module implementing the image transformation network '''
@@ -304,8 +304,7 @@ def train(args):
       style_loss = 0.
       for ft_y, tg_s in zip(features_y, target_gram_style):
         gm_y = gram_matrix(ft_y)
-        style_loss += mse_loss(gm_y, tg_s[:size_batch, :, :])
-      style_loss *= args.style_weight
+        style_loss += args.style_weight * mse_loss(gm_y, tg_s[:size_batch, :, :])
 
       total_loss = content_loss + style_loss + tv_loss
       total_loss.backward()
