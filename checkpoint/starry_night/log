@@ -1,5 +1,15 @@
+<<<<<<< HEAD
 INFO:root:Wed Nov 29 11:31:02 2017	Epoch 1:	[2000/82783]	content: 11.804233	style: 5.003633	total: 16.807866	batch: 500
 INFO:root:Wed Nov 29 11:37:54 2017	Epoch 1:	[4000/82783]	content: 8.371897	style: 2.478233	total: 10.850130	batch: 1000
 INFO:root:Wed Nov 29 11:44:45 2017	Epoch 1:	[6000/82783]	content: 6.948878	style: 2.405770	total: 9.354648	batch: 1500
 INFO:root:Wed Nov 29 11:51:36 2017	Epoch 1:	[8000/82783]	content: 6.212213	style: 2.449711	total: 8.661924	batch: 2000
 INFO:root:Wed Nov 29 11:58:28 2017	Epoch 1:	[10000/82783]	content: 5.566776	style: 2.504959	total: 8.071735	batch: 2500
+=======
+INFO:root:Wed Nov 29 13:09:14 2017	Epoch 1:	[2000/82783]	content: 6.459490	style: 0.608054	total: 7.067544	batch: 500
+INFO:root:Wed Nov 29 13:16:05 2017	Epoch 1:	[4000/82783]	content: 3.781280	style: 0.536295	total: 4.317575	batch: 1000
+INFO:root:Wed Nov 29 13:22:57 2017	Epoch 1:	[6000/82783]	content: 2.610647	style: 0.501166	total: 3.111813	batch: 1500
+INFO:root:Wed Nov 29 13:29:48 2017	Epoch 1:	[8000/82783]	content: 2.147899	style: 0.494877	total: 2.642776	batch: 2000
+INFO:root:Wed Nov 29 13:36:39 2017	Epoch 1:	[10000/82783]	content: 1.929878	style: 0.486992	total: 2.416869	batch: 2500
+INFO:root:Wed Nov 29 13:43:29 2017	Epoch 1:	[12000/82783]	content: 1.744499	style: 0.491865	total: 2.236365	batch: 3000
+INFO:root:Wed Nov 29 13:50:20 2017	Epoch 1:	[14000/82783]	content: 1.649852	style: 0.487171	total: 2.137023	batch: 3500
+>>>>>>> 3e907efca496c0589dab6319da0fde080f22abd2

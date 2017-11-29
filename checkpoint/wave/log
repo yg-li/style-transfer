@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 INFO:root:Tue Nov 28 23:01:44 2017	Epoch 1:	[2000/82783]	content: 6.039064	style: 0.428084	total: 6.467149	batch: 500
 INFO:root:Tue Nov 28 23:08:35 2017	Epoch 1:	[4000/82783]	content: 3.216990	style: 0.353213	total: 3.570203	batch: 1000
 INFO:root:Tue Nov 28 23:16:35 2017	Epoch 1:	[2000/82783]	content: 16.270768	style: 27.706406	total: 43.977173	batch: 500
@@ -82,3 +83,10 @@ INFO:root:Wed Nov 29 08:14:10 2017	Epoch 2:	[76000/82783]	content: 5.285030	styl
 INFO:root:Wed Nov 29 08:21:01 2017	Epoch 2:	[78000/82783]	content: 5.253198	style: 3.802516	total: 9.055714	batch: 19500
 INFO:root:Wed Nov 29 08:27:53 2017	Epoch 2:	[80000/82783]	content: 5.218874	style: 3.833623	total: 9.052497	batch: 20000
 INFO:root:Wed Nov 29 08:34:44 2017	Epoch 2:	[82000/82783]	content: 5.264101	style: 3.828963	total: 9.093064	batch: 20500
+=======
+INFO:root:Wed Nov 29 10:49:12 2017	Epoch 1:	[2000/82783]	content: 14.110246	style: 12.300320	total: 26.410566	batch: 500
+INFO:root:Wed Nov 29 10:56:03 2017	Epoch 1:	[4000/82783]	content: 11.493574	style: 4.590164	total: 16.083738	batch: 1000
+INFO:root:Wed Nov 29 11:02:54 2017	Epoch 1:	[6000/82783]	content: 9.340924	style: 4.271432	total: 13.612356	batch: 1500
+INFO:root:Wed Nov 29 11:09:45 2017	Epoch 1:	[8000/82783]	content: 8.056794	style: 4.130145	total: 12.186939	batch: 2000
+INFO:root:Wed Nov 29 11:16:36 2017	Epoch 1:	[10000/82783]	content: 7.067937	style: 4.083484	total: 11.151422	batch: 2500
+>>>>>>> 3e907efca496c0589dab6319da0fde080f22abd2
