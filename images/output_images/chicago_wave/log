@@ -1,0 +1,51 @@
+INFO:root:run 20:
+Style Loss : 4.186581 Content Loss: 2.211108
+INFO:root:run 40:
+Style Loss : 1.385542 Content Loss: 1.916467
+INFO:root:run 60:
+Style Loss : 0.799744 Content Loss: 1.729386
+INFO:root:run 80:
+Style Loss : 0.575813 Content Loss: 1.618007
+INFO:root:run 100:
+Style Loss : 0.461665 Content Loss: 1.532379
+INFO:root:run 120:
+Style Loss : 0.392551 Content Loss: 1.463306
+INFO:root:run 140:
+Style Loss : 0.355254 Content Loss: 1.400887
+INFO:root:run 160:
+Style Loss : 0.322281 Content Loss: 1.364129
+INFO:root:run 180:
+Style Loss : 0.303866 Content Loss: 1.328780
+INFO:root:run 200:
+Style Loss : 0.283560 Content Loss: 1.294017
+INFO:root:run 220:
+Style Loss : 0.271995 Content Loss: 1.262775
+INFO:root:run 240:
+Style Loss : 0.261956 Content Loss: 1.238267
+INFO:root:run 260:
+Style Loss : 0.253294 Content Loss: 1.213608
+INFO:root:run 280:
+Style Loss : 0.249021 Content Loss: 1.191911
+INFO:root:run 300:
+Style Loss : 0.243295 Content Loss: 1.176282
+INFO:root:run 320:
+Style Loss : 0.238094 Content Loss: 1.163112
+INFO:root:run 340:
+Style Loss : 0.235358 Content Loss: 1.149738
+INFO:root:run 360:
+Style Loss : 0.232406 Content Loss: 1.137854
+INFO:root:run 380:
+Style Loss : 0.230838 Content Loss: 1.127065
+INFO:root:run 400:
+Style Loss : 0.228427 Content Loss: 1.117888
+INFO:root:run 420:
+Style Loss : 0.226145 Content Loss: 1.110046
+INFO:root:run 440:
+Style Loss : 0.224146 Content Loss: 1.101844
+INFO:root:run 460:
+Style Loss : 0.223135 Content Loss: 1.094056
+INFO:root:run 480:
+Style Loss : 0.221869 Content Loss: 1.086110
+INFO:root:run 500:
+Style Loss : 0.221044 Content Loss: 1.078818
+INFO:root:Transferring finished
