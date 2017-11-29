@@ -54,11 +54,11 @@ def image_loader(image_name, scale=None, transform=None):
   image = Image.open(image_name)
   if transform is not None:
     image = toTensor(transform(image)).type(dtype)
-  elif scale is None:
-    image = toTensor(image).type(dtype)
-  else:
+  elif scale is not None:
     cutImage = transforms.Scale(scale)
     image = toTensor(cutImage(image)).type(dtype)
+  else:
+    image = toTensor(image).type(dtype)
   return image
 
 def normalize_images(images):
@@ -71,7 +71,7 @@ def normalize_images(images):
     std[:, i, :, :] = STD_IMAGE[i]
   return (images - Variable(mean)) / Variable(std)
 
-class LossNetwork(torch.nn.Module):
+class LossNetwork(nn.Module):
   ''' Module based on pre-trained VGG 19 for extracting high level features of image
     Use relu3_3 for content representation
     Use relu1_2, relu2_2, relu3_3, and relu4_3 for style representation
@@ -79,10 +79,10 @@ class LossNetwork(torch.nn.Module):
   def __init__(self):
     super(LossNetwork, self).__init__()
     vgg = models.vgg16(pretrained=True).features
-    self.slice1 = torch.nn.Sequential()
-    self.slice2 = torch.nn.Sequential()
-    self.slice3 = torch.nn.Sequential()
-    self.slice4 = torch.nn.Sequential()
+    self.slice1 = nn.Sequential()
+    self.slice2 = nn.Sequential()
+    self.slice3 = nn.Sequential()
+    self.slice4 = nn.Sequential()
     for x in range(4):
       self.slice1.add_module(str(x), vgg[x])
     for x in range(4, 9):
@@ -95,17 +95,12 @@ class LossNetwork(torch.nn.Module):
       param.requires_grad = False
 
   def forward(self, x):
-    y = self.slice1(x)
-    relu1_2 = y
-    y = self.slice2(y)
-    relu2_2 = y
-    y = self.slice3(y)
-    relu3_3 = y
-    y = self.slice4(y)
-    relu4_3 = y
+    relu1_2 = self.slice1(x)
+    relu2_2 = self.slice2(relu1_2)
+    relu3_3 = self.slice3(relu2_2)
+    relu4_3 = self.slice4(relu3_3)
     outputs = namedtuple('Outputs', ['relu1_2', 'relu2_2', 'relu3_3', 'relu4_3'])
-    out = outputs(relu1_2, relu2_2, relu3_3, relu4_3)
-    return out
+    return outputs(relu1_2, relu2_2, relu3_3, relu4_3)
 
 def gram_matrix(input):
   """ Compute batch-wise gram matrices """
@@ -114,17 +109,17 @@ def gram_matrix(input):
   G = features.bmm(features.transpose(1,2))
   return G / (h * w)
 
-class TransformerNetwork(torch.nn.Module):
+class TransformerNetwork(nn.Module):
   ''' Module implementing the image transformation network '''
   def __init__(self):
     super(TransformerNetwork, self).__init__()
     # Downsampling
-    self.conv1 = ConvLayer(3, 32, kernel_size=9, stride=1)
-    self.in1 = torch.nn.InstanceNorm2d(32, affine=True)
-    self.conv2 = ConvLayer(32, 64, kernel_size=3, stride=2)
-    self.in2 = torch.nn.InstanceNorm2d(64, affine=True)
-    self.conv3 = ConvLayer(64, 128, kernel_size=3, stride=2)
-    self.in3 = torch.nn.InstanceNorm2d(128, affine=True)
+    self.conv1 = nn.Conv2d(3, 32, kernel_size=9, stride=1, padding=4)
+    self.in1 = nn.InstanceNorm2d(32, affine=True)
+    self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1)
+    self.in2 = nn.InstanceNorm2d(64, affine=True)
+    self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
+    self.in3 = nn.InstanceNorm2d(128, affine=True)
     # Residual layers
     self.res1 = ResidualBlock(128)
     self.res2 = ResidualBlock(128)
@@ -132,86 +127,51 @@ class TransformerNetwork(torch.nn.Module):
     self.res4 = ResidualBlock(128)
     self.res5 = ResidualBlock(128)
     # Upsampling
-    self.deconv1 = UpsampleConvLayer(128, 64, kernel_size=3, stride=1, upsample=2)
-    self.in4 = torch.nn.InstanceNorm2d(64, affine=True)
-    self.deconv2 = UpsampleConvLayer(64, 32, kernel_size=3, stride=1, upsample=2)
-    self.in5 = torch.nn.InstanceNorm2d(32, affine=True)
-    self.deconv3 = ConvLayer(32, 3, kernel_size=9, stride=1)
-    self.in6 = torch.nn.InstanceNorm2d(3, affine=True)
+    self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1)
+    self.in4 = nn.InstanceNorm2d(64, affine=True)
+    self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1)
+    self.in5 = nn.InstanceNorm2d(32, affine=True)
+    self.deconv3 = nn.Conv2d(32, 3, kernel_size=9, stride=1, padding=4)
+    self.in6 = nn.InstanceNorm2d(3, affine=True)
     # Non-linearities
-    self.relu = torch.nn.ReLU()
-    self.tanh = torch.nn.Tanh()
+    self.relu = nn.ReLU()
+    self.tanh = nn.Tanh()
 
   def forward(self, x):
     y = self.relu(self.in1(self.conv1(x)))
+    size1 = y.size()
     y = self.relu(self.in2(self.conv2(y)))
+    size2 = y.size()
     y = self.relu(self.in3(self.conv3(y)))
     y = self.res1(y)
     y = self.res2(y)
     y = self.res3(y)
     y = self.res4(y)
     y = self.res5(y)
-    y = self.relu(self.in4(self.deconv1(y)))
-    y = self.relu(self.in5(self.deconv2(y)))
+    y = self.relu(self.in4(self.deconv1(y, output_size=size2)))
+    y = self.relu(self.in5(self.deconv2(y, output_size=size1)))
     y = self.tanh(self.in6(self.deconv3(y)))
     return y.add(1).div(2)
 
-class ConvLayer(torch.nn.Module):
-  ''' Module representing a convolutional layer which preserves the size of input '''
-  def __init__(self, in_channels, out_channels, kernel_size, stride):
-    super(ConvLayer, self).__init__()
-    reflection_padding = kernel_size // 2
-    self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
-    self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
-
-  def forward(self, x):
-    y = self.reflection_pad(x)
-    y = self.conv2d(y)
-    return y
-
-class ResidualBlock(torch.nn.Module):
+class ResidualBlock(nn.Module):
   ''' Residual block
       It helps the network to learn the identify function
   '''
   def __init__(self, channels):
     super(ResidualBlock, self).__init__()
-    self.conv1 = ConvLayer(channels, channels, kernel_size=3, stride=1)
-    self.in1 = torch.nn.InstanceNorm2d(channels, affine=True)
-    self.conv2 = ConvLayer(channels, channels, kernel_size=3, stride=1)
-    self.in2 = torch.nn.InstanceNorm2d(channels, affine=True)
-    self.relu = torch.nn.ReLU()
+    self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, stride=1, padding=1)
+    self.in1 = nn.InstanceNorm2d(channels, affine=True)
+    self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, stride=1, padding=1)
+    self.in2 = nn.InstanceNorm2d(channels, affine=True)
+    self.relu = nn.ReLU()
 
   def forward(self, x):
-    res = x
     y = self.relu(self.in1(self.conv1(x)))
     y = self.in2(self.conv2(y))
-    y = y + res
-    return y
-
-class UpsampleConvLayer(torch.nn.Module):
-  ''' UpsampleConvLayer
-      Upsample the input then do a convolution
-  '''
-  def __init__(self, in_channels, out_channels, kernel_size, stride, upsample=None):
-    super(UpsampleConvLayer, self).__init__()
-    self.upsample_layer = torch.nn.Upsample(scale_factor=upsample, mode='nearest')
-    reflection_padding = kernel_size // 2
-    self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
-    self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
-
-  def forward(self, x):
-    y = self.upsample_layer(x)
-    y = self.reflection_pad(y)
-    y = self.conv2d(y)
-    return y
+    return y + x
 
 def train(args):
   print('Start training', flush=True)
-  # np.random.seed(args.seed)
-  # torch.manual_seed(args.seed)
-  #
-  # if use_cuda:
-  #   torch.cuda.manual_seed
 
   # Training data
   transform = transforms.Compose([
@@ -226,7 +186,7 @@ def train(args):
   print('Loading networks', flush=True)
   transformer = TransformerNetwork()
   optimizer = Adam(transformer.parameters(), args.lr)
-  mse_loss = torch.nn.MSELoss()
+  mse_loss = nn.MSELoss()
 
   e_has = 0
   batch_has = 0
@@ -273,14 +233,12 @@ def train(args):
     agg_style_loss = 0.0
     count = 0
     for batch_id, (x, _) in enumerate(train_loader):
+      count += len(x)
       if batch_id < batch_has:
-        count += len(x)
         if (batch_id+1) % args.log_interval == 0:
           print('Skipping through batch' , str(batch_id + 1), flush=True)
         continue
       batch_has = 0
-      size_batch = len(x)
-      count += size_batch
 
       optimizer.zero_grad()
       x = Variable(x).type(dtype)
@@ -304,7 +262,7 @@ def train(args):
       style_loss = 0.
       for ft_y, tg_s in zip(features_y, target_gram_style):
         gm_y = gram_matrix(ft_y)
-        style_loss += args.style_weight * mse_loss(gm_y, tg_s[:size_batch, :, :])
+        style_loss += args.style_weight * mse_loss(gm_y, tg_s[:len(x), :, :])
 
       total_loss = content_loss + style_loss + tv_loss
       total_loss.backward()
@@ -325,7 +283,7 @@ def train(args):
         agg_content_loss = 0.
         agg_style_loss = 0.
 
-      if args.checkpoint_dir is not None and (batch_id + 1) % args.checkpoint_interval == 0:
+      if (batch_id + 1) % args.checkpoint_interval == 0:
         transformer.eval()
         if use_cuda:
           transformer.cpu()
@@ -341,8 +299,6 @@ def train(args):
   if use_cuda:
     transformer.cpu()
   save_model_filename = (args.style_image.split('/')[-1]).split('.')[0] + '.model'
-  # save_model_filename = 'epoch_' + str(args.epochs) + '_' + str(time.ctime()).replace(' ', '_') + '_' + str(
-  #   args.content_weight) + '_' + str(args.style_weight) + '.model'
   save_model_path = os.path.join(args.save_model_dir, save_model_filename)
   torch.save(transformer.state_dict(), save_model_path)
 
@@ -397,8 +353,6 @@ if __name__ == '__main__':
                                 help='number of training epochs, default is 2')
   train_parser.add_argument('--batch-size', type=int, default=4,
                                 help='batch size for training, default is 4')
-  train_parser.add_argument('--seed', type=int, default=42,
-                                help='random seed for training')
   train_parser.add_argument('--content-weight', type=float, default=1,
                                 help='weight for content-loss, default is 1')
   train_parser.add_argument('--style-weight', type=float, default=1e3,
