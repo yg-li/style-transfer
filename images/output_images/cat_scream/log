@@ -1,2 +1,16 @@
 INFO:root:run 20:
 Style Loss : 2.940632 Content Loss: 0.331125
+INFO:root:run 40:
+Style Loss : 0.766219 Content Loss: 0.309746
+INFO:root:run 60:
+Style Loss : 0.363889 Content Loss: 0.290769
+INFO:root:run 80:
+Style Loss : 0.203484 Content Loss: 0.273894
+INFO:root:run 100:
+Style Loss : 0.146394 Content Loss: 0.260491
+INFO:root:run 120:
+Style Loss : 0.114211 Content Loss: 0.247565
+INFO:root:run 140:
+Style Loss : 0.109913 Content Loss: 0.237663
+INFO:root:run 160:
+Style Loss : 0.093943 Content Loss: 0.232610
