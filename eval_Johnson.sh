@@ -1,5 +1,5 @@
 #!/bin/bash
-model=mandolin_girl
+model=wave
 for i in 0 1
 do
   for ((j=2000; j<=20000; j+=2000))
