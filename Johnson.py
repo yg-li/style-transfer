@@ -43,7 +43,7 @@ def check_paths(args):
     print(e, flush=True)
     sys.exit(1)
 
-def image_loader(image_name, scale=None):
+def image_loader(image_name, scale=None, transform=None):
   ''' helper for loading images
   Args:
     image_name: the path to the image
@@ -52,7 +52,9 @@ def image_loader(image_name, scale=None):
     image: the Tensor representing the image loaded (value in [0,1])
   '''
   image = Image.open(image_name)
-  if scale is None:
+  if transform is not None:
+    image = toTensor(transform(image)).type(dtype)
+  elif scale is None:
     image = toTensor(image).type(dtype)
   else:
     cutImage = transforms.Scale(scale)
@@ -152,8 +154,7 @@ class TransformerNetwork(torch.nn.Module):
     y = self.relu(self.in4(self.deconv1(y)))
     y = self.relu(self.in5(self.deconv2(y)))
     y = self.tanh(self.in6(self.deconv3(y)))
-    ones = Variable(torch.ones(y.size()).type(dtype))
-    return (y + ones) / (ones + ones)
+    return y.add(1).div(2)
 
 class ConvLayer(torch.nn.Module):
   ''' Module representing a convolutional layer which preserves the size of input '''
@@ -230,7 +231,7 @@ def train(args):
   e_has = 0
   batch_has = 0
   checkpoints = os.listdir(args.checkpoint_dir)
-  if len(checkpoints) > 0:
+  if len(checkpoints) > 1:
     if 'log' in checkpoints:
       checkpoints.remove('log')
     if '.DS_Store' in checkpoints:
@@ -257,7 +258,7 @@ def train(args):
     vgg.cuda()
 
   # Target of style
-  style = Variable(normaliseImage(image_loader(args.style_image, 512))).type(dtype)
+  style = Variable(normaliseImage(image_loader(args.style_image)))
   style = style.repeat(args.batch_size, 1, 1, 1)
   features_style = vgg(style)
   target_gram_style = [gram_matrix(x) for x in features_style]
@@ -287,6 +288,10 @@ def train(args):
 
       tv_loss = TV_WEIGHT * (torch.sum(torch.abs(y[:,:,:,:-1]-y[:,:,:,1:])) +
                              torch.sum(torch.abs(y[:,:,:-1,:]-y[:,:,1:,:])))
+
+      if (batch_id + 1) % args.log_interval == 0:
+        utils.save_image(x.data[0], args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_content.jpg')
+        utils.save_image(y.data[0], args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_output.jpg')
 
       x = normalize_images(x)
       y = normalize_images(y)
@@ -346,7 +351,7 @@ def train(args):
 
 def stylize(args):
   print('Start stylizing', flush=True)
-  content_image = image_loader(args.content_image).type(dtype)
+  content_image = image_loader(args.content_image)
   content_image = content_image.unsqueeze(0)
   content_image = Variable(content_image, volatile=True)
 
@@ -395,10 +400,10 @@ if __name__ == '__main__':
                                 help='batch size for training, default is 4')
   train_parser.add_argument('--seed', type=int, default=42,
                                 help='random seed for training')
-  train_parser.add_argument('--content-weight', type=float, default=1e5,
-                                help='weight for content-loss, default is 1e5')
-  train_parser.add_argument('--style-weight', type=float, default=1e10,
-                                help='weight for style-loss, default is 1e10')
+  train_parser.add_argument('--content-weight', type=float, default=1,
+                                help='weight for content-loss, default is 1')
+  train_parser.add_argument('--style-weight', type=float, default=1e3,
+                                help='weight for style-loss, default is 1e3')
   train_parser.add_argument('--lr', type=float, default=1e-3,
                                 help='learning rate, default is 1e-3')
   train_parser.add_argument('--log-interval', type=int, default=500,
