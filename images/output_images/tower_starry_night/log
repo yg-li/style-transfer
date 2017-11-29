@@ -1,0 +1,4 @@
+INFO:root:run 20:
+Style Loss : 1.106329 Content Loss: 1.895295
+INFO:root:run 40:
+Style Loss : 0.340682 Content Loss: 1.512174
