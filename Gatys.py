@@ -15,9 +15,9 @@ import torchvision.utils as utils
 from PIL import Image
 
 # how important is the content of content image and that of the generated image being similar
-CONTENT_WEIGHT = 5
+CONTENT_WEIGHT = 50
 # how important is the style of style image and that of the generated image being similar
-STYLE_WEIGHT = 500
+STYLE_WEIGHT = 3750
 TV_WEIGHT = 1e-6
 
 NUM_STEPS = 500
@@ -170,6 +170,8 @@ def transfer(content_img, style_img, input_img, output_dir, num_steps=NUM_STEPS)
 def main(args):
   num_steps = NUM_STEPS
 
+  global STYLE_WEIGHT
+
   # set content and style weights
   if args.style_to_content is not None:
     STYLE_WEIGHT = CONTENT_WEIGHT * args.style_to_content
@@ -205,7 +207,7 @@ def main(args):
 
   # start logging
   logging.basicConfig(filename=output_dir + 'log', level=logging.INFO)
-  logging.info('Style weight:', str(STYLE_WEIGHT), 'Content Weight', str(CONTENT_WEIGHT))
+  logging.info('Style weight: ' + str(STYLE_WEIGHT) + ' Content Weight: ' + str(CONTENT_WEIGHT))
 
   # transfer style
   output_img = transfer(content_img, style_img, input_img, output_dir, num_steps)

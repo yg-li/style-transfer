@@ -114,11 +114,11 @@ class TransformerNetwork(nn.Module):
   def __init__(self):
     super(TransformerNetwork, self).__init__()
     # Downsampling
-    self.conv1 = nn.Conv2d(3, 32, kernel_size=9, stride=1, padding=4)
+    self.conv1 = nn.Conv2d(3, 32, kernel_size=9, stride=1)
     self.in1 = nn.InstanceNorm2d(32, affine=True)
-    self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1)
+    self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2)
     self.in2 = nn.InstanceNorm2d(64, affine=True)
-    self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
+    self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=2)
     self.in3 = nn.InstanceNorm2d(128, affine=True)
     # Residual layers
     self.res1 = ResidualBlock(128)
@@ -127,22 +127,25 @@ class TransformerNetwork(nn.Module):
     self.res4 = ResidualBlock(128)
     self.res5 = ResidualBlock(128)
     # Upsampling
-    self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1)
+    self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding = 1)
     self.in4 = nn.InstanceNorm2d(64, affine=True)
-    self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1)
+    self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding = 1)
     self.in5 = nn.InstanceNorm2d(32, affine=True)
-    self.deconv3 = nn.Conv2d(32, 3, kernel_size=9, stride=1, padding=4)
+    self.conv4 = nn.Conv2d(32, 3, kernel_size=9, stride=1)
     self.in6 = nn.InstanceNorm2d(3, affine=True)
     # Non-linearities
     self.relu = nn.ReLU()
     self.tanh = nn.Tanh()
+    # Reflection paddings
+    self.pad_4 = nn.ReflectionPad2d(4)
+    self.pad_1 = nn.ReflectionPad2d(1)
 
   def forward(self, x):
-    y = self.relu(self.in1(self.conv1(x)))
+    y = self.relu(self.in1(self.conv1(self.pad_4(x))))
     size1 = y.size()
-    y = self.relu(self.in2(self.conv2(y)))
+    y = self.relu(self.in2(self.conv2(self.pad_1(y))))
     size2 = y.size()
-    y = self.relu(self.in3(self.conv3(y)))
+    y = self.relu(self.in3(self.conv3(self.pad_1(y))))
     y = self.res1(y)
     y = self.res2(y)
     y = self.res3(y)
@@ -150,7 +153,7 @@ class TransformerNetwork(nn.Module):
     y = self.res5(y)
     y = self.relu(self.in4(self.deconv1(y, output_size=size2)))
     y = self.relu(self.in5(self.deconv2(y, output_size=size1)))
-    y = self.tanh(self.in6(self.deconv3(y)))
+    y = self.tanh(self.in6(self.conv4(self.pad_4(y))))
     return y.add(1).div(2)
 
 class ResidualBlock(nn.Module):
@@ -159,15 +162,16 @@ class ResidualBlock(nn.Module):
   '''
   def __init__(self, channels):
     super(ResidualBlock, self).__init__()
-    self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, stride=1, padding=1)
+    self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, stride=1)
     self.in1 = nn.InstanceNorm2d(channels, affine=True)
-    self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, stride=1, padding=1)
+    self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, stride=1)
     self.in2 = nn.InstanceNorm2d(channels, affine=True)
     self.relu = nn.ReLU()
+    self.pad_1 = nn.ReflectionPad2d(1)
 
   def forward(self, x):
-    y = self.relu(self.in1(self.conv1(x)))
-    y = self.in2(self.conv2(y))
+    y = self.relu(self.in1(self.conv1(self.pad_1(x))))
+    y = self.in2(self.conv2(self.pad_1(y)))
     return y + x
 
 def train(args):
@@ -330,7 +334,7 @@ def main(args):
       print('Already trained for this style\n', flush=True)
       return
     logging.basicConfig(filename=args.checkpoint_dir + '/log', level=logging.INFO)
-    logging('Content weight', str(args.content_weight), 'Style weight', str(args.style_weight))
+    logging.info('Content weight: ' +  str(args.content_weight) + ' Style weight: ' + str(args.style_weight))
     train(args)
   else:
     stylize(args)
@@ -354,10 +358,10 @@ if __name__ == '__main__':
                                 help='number of training epochs, default is 2')
   train_parser.add_argument('--batch-size', type=int, default=4,
                                 help='batch size for training, default is 4')
-  train_parser.add_argument('--content-weight', type=float, default=1,
-                                help='weight for content-loss, default is 1')
-  train_parser.add_argument('--style-weight', type=float, default=1e3,
-                                help='weight for style-loss, default is 1e3')
+  train_parser.add_argument('--content-weight', type=float, default=10,
+                                help='weight for content-loss, default is 10')
+  train_parser.add_argument('--style-weight', type=float, default=750,
+                                help='weight for style-loss, default is 750')
   train_parser.add_argument('--lr', type=float, default=1e-3,
                                 help='learning rate, default is 1e-3')
   train_parser.add_argument('--log-interval', type=int, default=500,
