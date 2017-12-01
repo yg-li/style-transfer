@@ -222,7 +222,7 @@ def train(args):
     vgg.cuda()
 
   # Target of style
-  style = Variable(normaliseImage(image_loader(args.style_image)))
+  style = Variable(normaliseImage(image_loader(args.style_image, scale=args.image_size)))
   style = style.repeat(args.batch_size, 1, 1, 1)
   features_style = vgg(style)
   target_gram_style = [gram_matrix(x) for x in features_style]
