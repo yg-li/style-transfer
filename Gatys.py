@@ -15,9 +15,9 @@ import torchvision.utils as utils
 from PIL import Image
 
 # how important is the content of content image and that of the generated image being similar
-CONTENT_WEIGHT = 50
+CONTENT_WEIGHT = 10
 # how important is the style of style image and that of the generated image being similar
-STYLE_WEIGHT = 3750
+STYLE_WEIGHT = 750
 TV_WEIGHT = 1e-6
 
 NUM_STEPS = 500
