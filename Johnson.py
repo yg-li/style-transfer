@@ -360,8 +360,8 @@ if __name__ == '__main__':
                                 help='batch size for training, default is 4')
   train_parser.add_argument('--content-weight', type=float, default=10,
                                 help='weight for content-loss, default is 10')
-  train_parser.add_argument('--style-weight', type=float, default=250,
-                                help='weight for style-loss, default is 750')
+  train_parser.add_argument('--style-weight', type=float, default=500,
+                                help='weight for style-loss, default is 500')
   train_parser.add_argument('--lr', type=float, default=1e-3,
                                 help='learning rate, default is 1e-3')
   train_parser.add_argument('--log-interval', type=int, default=500,
