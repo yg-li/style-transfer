@@ -72,7 +72,7 @@ def normalize_images(images):
   return (images - Variable(mean)) / Variable(std)
 
 class LossNetwork(nn.Module):
-  ''' Module based on pre-trained VGG 19 for extracting high level features of image
+  ''' Module based on pre-trained VGG 16 for extracting high level features of image
     Use relu3_3 for content representation
     Use relu1_2, relu2_2, relu3_3, and relu4_3 for style representation
   '''
@@ -189,8 +189,6 @@ def train(args):
   # Networks
   print('Loading networks', flush=True)
   transformer = TransformerNetwork()
-  optimizer = Adam(transformer.parameters(), args.lr)
-  mse_loss = nn.MSELoss()
 
   e_has = 0
   batch_has = 0
@@ -204,13 +202,18 @@ def train(args):
       if int(f.split('.')[0].split('_')[0]) > e_has:
         e_has = int(f.split('.')[0].split('_')[0])
     for f in checkpoints:
-      if int(f.split('.')[0].split('_')[0]) == e_has and int(f.split('.')[0].split('_')[1]) > batch_has:
+      if int(f.split('.')[0].split('_')[0]) == e_has and \
+                      len(f.split('.')[0].split('_')) == 2 and \
+                      int(f.split('.')[0].split('_')[1]) > batch_has:
         batch_has = int(f.split('.')[0].split('_')[1])
+    batch_has = batch_has // args.checkpoint_interval * args.checkpoint_interval
     print('e_has:', str(e_has), 'batch_has:', str(batch_has))
 
     if e_has != 0 or batch_has != 0:
       transformer.load_state_dict(torch.load(args.checkpoint_dir + '/' + str(e_has) + '_' + str(batch_has) + '.pth'))
 
+  optimizer = Adam(transformer.parameters(), args.lr)
+  mse_loss = nn.MSELoss()
   vgg = LossNetwork()
 
   if torch.cuda.device_count() > 1:
@@ -360,8 +363,8 @@ if __name__ == '__main__':
                                 help='batch size for training, default is 4')
   train_parser.add_argument('--content-weight', type=float, default=10,
                                 help='weight for content-loss, default is 10')
-  train_parser.add_argument('--style-weight', type=float, default=500,
-                                help='weight for style-loss, default is 500')
+  train_parser.add_argument('--style-weight', type=float, default=250,
+                                help='weight for style-loss, default is 250')
   train_parser.add_argument('--lr', type=float, default=1e-3,
                                 help='learning rate, default is 1e-3')
   train_parser.add_argument('--log-interval', type=int, default=500,
