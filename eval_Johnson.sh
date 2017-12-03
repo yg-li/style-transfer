@@ -1,5 +1,5 @@
 #!/bin/bash
-model=starry_night
+model=dance
 
 # Evaluate intermediate checkpoints
 # for i in 0 1
@@ -21,5 +21,5 @@ for content_img in ./images/content_images/*.jpg
 do
   printf "Transfering style of ${model} to ${content_img##*/}\n"
   filename=${content_img##*/}
-  python3 Johnson.py eval --content-image ${content_img} --model ./model/${filename%%.*}.model --output-image ./images/johnson_output/${model}_${filename%%.*}.jpg
+  python3 Johnson.py eval --content-image ${content_img} --model ./model/${model}.model --output-image ./images/johnson_output/${model}/${filename%%.*}.jpg
 done
