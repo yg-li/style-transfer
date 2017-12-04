@@ -1,7 +1,8 @@
 #!/bin/bash
-model=dance
+model=scream
 
 # Evaluate intermediate checkpoints
+# mkdir ./images/johnson_output/${model}
 # for i in 0 1
 # do
 #   for ((j=2000; j<=20000; j+=2000))
@@ -17,6 +18,7 @@ model=dance
 # done
 
 # Evaluate the final model
+mkdir ./images/johnson_output/${model}
 for content_img in ./images/content_images/*.jpg
 do
   printf "Transfering style of ${model} to ${content_img##*/}\n"
