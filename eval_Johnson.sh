@@ -1,5 +1,5 @@
 #!/bin/bash
-model=scream
+model=dance
 
 # Evaluate intermediate checkpoints
 # mkdir ./images/johnson_output/${model}
