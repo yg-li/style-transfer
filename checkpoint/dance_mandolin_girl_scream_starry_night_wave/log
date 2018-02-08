@@ -1,0 +1,97 @@
+INFO:root:Content weight: 10 Style weight: 250
+INFO:root:Content weight: 10 Style weight: 250
+INFO:root:Wed Feb  7 15:32:30 2018	Epoch 1:	[2000/82783]	content: 172.268512	style: 1024.115166	total: 1196.383678	batch: 500
+INFO:root:Wed Feb  7 15:43:14 2018	Epoch 1:	[4000/82783]	content: 186.410306	style: 448.556037	total: 634.966344	batch: 1000
+INFO:root:Wed Feb  7 15:53:29 2018	Epoch 1:	[6000/82783]	content: 187.885530	style: 347.943194	total: 535.828724	batch: 1500
+INFO:root:Content weight: 10 Style weight: 250
+INFO:root:Wed Feb  7 19:51:13 2018	Epoch 1:	[2000/82783]	content: 180.387205	style: 828.480144	total: 1008.867349	batch: 500
+INFO:root:Content weight: 10 Style weight: 250
+INFO:root:Content weight: 10 Style weight: 250
+INFO:root:Content weight: 10 Style weight: 250
+INFO:root:Content weight: 10 Style weight: 250
+INFO:root:Wed Feb  7 20:09:48 2018	Epoch 1:	[2000/82783]	content: 175.776380	style: 964.699439	total: 1140.475819	batch: 500
+INFO:root:Wed Feb  7 20:16:14 2018	Epoch 1:	[4000/82783]	content: 191.379007	style: 334.869489	total: 526.248497	batch: 1000
+INFO:root:Wed Feb  7 20:22:39 2018	Epoch 1:	[6000/82783]	content: 191.177006	style: 232.411579	total: 423.588585	batch: 1500
+INFO:root:Wed Feb  7 20:30:30 2018	Epoch 1:	[8000/82783]	content: 191.008359	style: 185.495684	total: 376.504043	batch: 2000
+INFO:root:Wed Feb  7 20:40:01 2018	Epoch 1:	[10000/82783]	content: 187.413630	style: 163.504439	total: 350.918070	batch: 2500
+INFO:root:Wed Feb  7 20:49:21 2018	Epoch 1:	[12000/82783]	content: 186.257327	style: 148.349652	total: 334.606979	batch: 3000
+INFO:root:Wed Feb  7 20:58:03 2018	Epoch 1:	[14000/82783]	content: 184.665646	style: 137.587738	total: 322.253384	batch: 3500
+INFO:root:Wed Feb  7 21:06:48 2018	Epoch 1:	[16000/82783]	content: 180.945568	style: 130.194072	total: 311.139639	batch: 4000
+INFO:root:Wed Feb  7 21:15:08 2018	Epoch 1:	[18000/82783]	content: 181.018809	style: 122.969561	total: 303.988370	batch: 4500
+INFO:root:Wed Feb  7 21:23:16 2018	Epoch 1:	[20000/82783]	content: 177.051299	style: 118.722563	total: 295.773862	batch: 5000
+INFO:root:Wed Feb  7 21:31:14 2018	Epoch 1:	[22000/82783]	content: 178.375962	style: 113.617387	total: 291.993349	batch: 5500
+INFO:root:Wed Feb  7 21:39:05 2018	Epoch 1:	[24000/82783]	content: 176.776180	style: 112.081729	total: 288.857910	batch: 6000
+INFO:root:Wed Feb  7 21:46:45 2018	Epoch 1:	[26000/82783]	content: 173.850254	style: 108.897941	total: 282.748195	batch: 6500
+INFO:root:Wed Feb  7 21:54:13 2018	Epoch 1:	[28000/82783]	content: 172.852315	style: 106.328210	total: 279.180525	batch: 7000
+INFO:root:Wed Feb  7 22:01:45 2018	Epoch 1:	[30000/82783]	content: 170.330027	style: 103.953805	total: 274.283832	batch: 7500
+INFO:root:Content weight: 10 Style weight: 250
+INFO:root:Wed Feb  7 22:21:53 2018	Epoch 1:	[26000/82783]	content: 174.163411	style: 116.774568	total: 290.937979	batch: 6500
+INFO:root:Wed Feb  7 22:28:18 2018	Epoch 1:	[28000/82783]	content: 173.543500	style: 109.756450	total: 283.299950	batch: 7000
+INFO:root:Wed Feb  7 22:34:44 2018	Epoch 1:	[30000/82783]	content: 170.970264	style: 105.013609	total: 275.983873	batch: 7500
+INFO:root:Wed Feb  7 22:41:54 2018	Epoch 1:	[32000/82783]	content: 169.206026	style: 102.957070	total: 272.163096	batch: 8000
+INFO:root:Wed Feb  7 22:49:05 2018	Epoch 1:	[34000/82783]	content: 168.918222	style: 101.403268	total: 270.321490	batch: 8500
+INFO:root:Wed Feb  7 22:56:07 2018	Epoch 1:	[36000/82783]	content: 167.945584	style: 98.279192	total: 266.224776	batch: 9000
+INFO:root:Wed Feb  7 23:03:08 2018	Epoch 1:	[38000/82783]	content: 164.990199	style: 97.929324	total: 262.919522	batch: 9500
+INFO:root:Wed Feb  7 23:10:04 2018	Epoch 1:	[40000/82783]	content: 164.260815	style: 96.471569	total: 260.732384	batch: 10000
+INFO:root:Wed Feb  7 23:17:05 2018	Epoch 1:	[42000/82783]	content: 162.874098	style: 94.204331	total: 257.078430	batch: 10500
+INFO:root:Wed Feb  7 23:23:59 2018	Epoch 1:	[44000/82783]	content: 163.410108	style: 95.130411	total: 258.540519	batch: 11000
+INFO:root:Wed Feb  7 23:30:46 2018	Epoch 1:	[46000/82783]	content: 161.106154	style: 93.078625	total: 254.184779	batch: 11500
+INFO:root:Wed Feb  7 23:37:29 2018	Epoch 1:	[48000/82783]	content: 159.946339	style: 92.410064	total: 252.356402	batch: 12000
+INFO:root:Wed Feb  7 23:44:12 2018	Epoch 1:	[50000/82783]	content: 159.470494	style: 91.390988	total: 250.861481	batch: 12500
+INFO:root:Wed Feb  7 23:50:52 2018	Epoch 1:	[52000/82783]	content: 157.712996	style: 91.334545	total: 249.047541	batch: 13000
+INFO:root:Wed Feb  7 23:57:29 2018	Epoch 1:	[54000/82783]	content: 156.493556	style: 90.422005	total: 246.915560	batch: 13500
+INFO:root:Thu Feb  8 00:04:06 2018	Epoch 1:	[56000/82783]	content: 155.919828	style: 89.761453	total: 245.681281	batch: 14000
+INFO:root:Thu Feb  8 00:10:43 2018	Epoch 1:	[58000/82783]	content: 156.171439	style: 89.423418	total: 245.594857	batch: 14500
+INFO:root:Thu Feb  8 00:17:18 2018	Epoch 1:	[60000/82783]	content: 155.574543	style: 88.291740	total: 243.866283	batch: 15000
+INFO:root:Thu Feb  8 00:23:51 2018	Epoch 1:	[62000/82783]	content: 154.424904	style: 87.996708	total: 242.421612	batch: 15500
+INFO:root:Thu Feb  8 00:30:23 2018	Epoch 1:	[64000/82783]	content: 153.835954	style: 87.545049	total: 241.381003	batch: 16000
+INFO:root:Thu Feb  8 00:36:54 2018	Epoch 1:	[66000/82783]	content: 152.406526	style: 87.149306	total: 239.555832	batch: 16500
+INFO:root:Thu Feb  8 00:43:25 2018	Epoch 1:	[68000/82783]	content: 152.706215	style: 86.795196	total: 239.501412	batch: 17000
+INFO:root:Thu Feb  8 00:49:56 2018	Epoch 1:	[70000/82783]	content: 151.873831	style: 85.681110	total: 237.554941	batch: 17500
+INFO:root:Thu Feb  8 00:56:26 2018	Epoch 1:	[72000/82783]	content: 151.159866	style: 86.583632	total: 237.743498	batch: 18000
+INFO:root:Thu Feb  8 01:02:56 2018	Epoch 1:	[74000/82783]	content: 151.365707	style: 84.763043	total: 236.128750	batch: 18500
+INFO:root:Thu Feb  8 01:09:26 2018	Epoch 1:	[76000/82783]	content: 150.652976	style: 85.015011	total: 235.667987	batch: 19000
+INFO:root:Thu Feb  8 01:15:55 2018	Epoch 1:	[78000/82783]	content: 149.826052	style: 83.716423	total: 233.542474	batch: 19500
+INFO:root:Thu Feb  8 01:22:24 2018	Epoch 1:	[80000/82783]	content: 149.382847	style: 84.439701	total: 233.822548	batch: 20000
+INFO:root:Thu Feb  8 01:28:53 2018	Epoch 1:	[82000/82783]	content: 148.923678	style: 84.343453	total: 233.267131	batch: 20500
+INFO:root:Thu Feb  8 01:37:50 2018	Epoch 2:	[2000/82783]	content: 149.189807	style: 83.394615	total: 232.584422	batch: 500
+INFO:root:Thu Feb  8 01:44:16 2018	Epoch 2:	[4000/82783]	content: 148.439022	style: 83.289520	total: 231.728542	batch: 1000
+INFO:root:Thu Feb  8 01:50:41 2018	Epoch 2:	[6000/82783]	content: 147.726158	style: 82.888093	total: 230.614251	batch: 1500
+INFO:root:Thu Feb  8 01:57:07 2018	Epoch 2:	[8000/82783]	content: 148.277258	style: 82.385086	total: 230.662345	batch: 2000
+INFO:root:Thu Feb  8 02:03:32 2018	Epoch 2:	[10000/82783]	content: 146.877246	style: 83.373002	total: 230.250248	batch: 2500
+INFO:root:Thu Feb  8 02:09:57 2018	Epoch 2:	[12000/82783]	content: 147.339461	style: 81.679277	total: 229.018738	batch: 3000
+INFO:root:Thu Feb  8 02:16:22 2018	Epoch 2:	[14000/82783]	content: 147.300823	style: 81.976533	total: 229.277355	batch: 3500
+INFO:root:Thu Feb  8 02:22:48 2018	Epoch 2:	[16000/82783]	content: 145.667250	style: 81.723924	total: 227.391174	batch: 4000
+INFO:root:Thu Feb  8 02:29:13 2018	Epoch 2:	[18000/82783]	content: 146.888773	style: 81.344959	total: 228.233732	batch: 4500
+INFO:root:Thu Feb  8 02:35:39 2018	Epoch 2:	[20000/82783]	content: 144.608003	style: 81.494169	total: 226.102172	batch: 5000
+INFO:root:Thu Feb  8 02:42:04 2018	Epoch 2:	[22000/82783]	content: 146.360358	style: 80.703544	total: 227.063902	batch: 5500
+INFO:root:Thu Feb  8 02:48:30 2018	Epoch 2:	[24000/82783]	content: 146.035190	style: 80.780702	total: 226.815893	batch: 6000
+INFO:root:Thu Feb  8 02:54:55 2018	Epoch 2:	[26000/82783]	content: 144.100268	style: 81.055128	total: 225.155396	batch: 6500
+INFO:root:Thu Feb  8 03:01:20 2018	Epoch 2:	[28000/82783]	content: 144.258046	style: 80.879531	total: 225.137577	batch: 7000
+INFO:root:Thu Feb  8 03:07:46 2018	Epoch 2:	[30000/82783]	content: 143.372524	style: 79.656048	total: 223.028572	batch: 7500
+INFO:root:Thu Feb  8 03:14:12 2018	Epoch 2:	[32000/82783]	content: 143.181447	style: 79.783702	total: 222.965149	batch: 8000
+INFO:root:Thu Feb  8 03:20:37 2018	Epoch 2:	[34000/82783]	content: 143.837819	style: 80.155596	total: 223.993414	batch: 8500
+INFO:root:Thu Feb  8 03:27:03 2018	Epoch 2:	[36000/82783]	content: 143.926486	style: 79.115181	total: 223.041667	batch: 9000
+INFO:root:Thu Feb  8 03:33:28 2018	Epoch 2:	[38000/82783]	content: 142.521105	style: 79.265852	total: 221.786957	batch: 9500
+INFO:root:Thu Feb  8 03:39:54 2018	Epoch 2:	[40000/82783]	content: 142.792150	style: 79.291901	total: 222.084051	batch: 10000
+INFO:root:Thu Feb  8 03:46:19 2018	Epoch 2:	[42000/82783]	content: 142.693976	style: 78.524075	total: 221.218051	batch: 10500
+INFO:root:Thu Feb  8 03:52:45 2018	Epoch 2:	[44000/82783]	content: 143.986347	style: 79.626560	total: 223.612908	batch: 11000
+INFO:root:Thu Feb  8 03:59:10 2018	Epoch 2:	[46000/82783]	content: 142.487672	style: 78.513074	total: 221.000746	batch: 11500
+INFO:root:Thu Feb  8 04:05:36 2018	Epoch 2:	[48000/82783]	content: 142.251753	style: 78.812688	total: 221.064440	batch: 12000
+INFO:root:Thu Feb  8 04:12:01 2018	Epoch 2:	[50000/82783]	content: 142.326367	style: 78.401703	total: 220.728070	batch: 12500
+INFO:root:Thu Feb  8 04:18:27 2018	Epoch 2:	[52000/82783]	content: 141.396009	style: 78.156201	total: 219.552210	batch: 13000
+INFO:root:Thu Feb  8 04:24:52 2018	Epoch 2:	[54000/82783]	content: 140.793860	style: 77.756854	total: 218.550713	batch: 13500
+INFO:root:Thu Feb  8 04:31:18 2018	Epoch 2:	[56000/82783]	content: 140.987792	style: 78.188390	total: 219.176182	batch: 14000
+INFO:root:Thu Feb  8 04:37:43 2018	Epoch 2:	[58000/82783]	content: 142.298910	style: 78.064195	total: 220.363105	batch: 14500
+INFO:root:Thu Feb  8 04:44:09 2018	Epoch 2:	[60000/82783]	content: 141.822405	style: 77.473259	total: 219.295664	batch: 15000
+INFO:root:Thu Feb  8 04:50:34 2018	Epoch 2:	[62000/82783]	content: 140.843379	style: 77.513428	total: 218.356807	batch: 15500
+INFO:root:Thu Feb  8 04:56:59 2018	Epoch 2:	[64000/82783]	content: 140.468460	style: 77.095987	total: 217.564447	batch: 16000
+INFO:root:Thu Feb  8 05:03:25 2018	Epoch 2:	[66000/82783]	content: 139.493956	style: 77.546371	total: 217.040327	batch: 16500
+INFO:root:Thu Feb  8 05:09:51 2018	Epoch 2:	[68000/82783]	content: 140.236551	style: 77.239009	total: 217.475561	batch: 17000
+INFO:root:Thu Feb  8 05:16:17 2018	Epoch 2:	[70000/82783]	content: 139.956314	style: 76.651384	total: 216.607697	batch: 17500
+INFO:root:Thu Feb  8 05:22:42 2018	Epoch 2:	[72000/82783]	content: 139.331485	style: 77.931125	total: 217.262609	batch: 18000
+INFO:root:Thu Feb  8 05:29:08 2018	Epoch 2:	[74000/82783]	content: 140.010190	style: 76.661715	total: 216.671904	batch: 18500
+INFO:root:Thu Feb  8 05:35:33 2018	Epoch 2:	[76000/82783]	content: 139.443950	style: 76.522813	total: 215.966762	batch: 19000
+INFO:root:Thu Feb  8 05:41:59 2018	Epoch 2:	[78000/82783]	content: 138.875062	style: 76.033098	total: 214.908160	batch: 19500
+INFO:root:Thu Feb  8 05:48:25 2018	Epoch 2:	[80000/82783]	content: 138.803400	style: 76.778702	total: 215.582102	batch: 20000
+INFO:root:Thu Feb  8 05:54:50 2018	Epoch 2:	[82000/82783]	content: 138.690554	style: 76.856606	total: 215.547160	batch: 20500

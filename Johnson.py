@@ -43,19 +43,20 @@ def check_paths(args):
     print(e, flush=True)
     sys.exit(1)
 
-def image_loader(image_name, scale=None, transform=None):
+def image_loader(image_name, size=None, transform=None):
   ''' helper for loading images
   Args:
     image_name: the path to the image
-    height, width: the height and width the loaded image needed to be resized to
+    size: the size of the loaded image needed to be resized to, can be a sequence or int
+    transform: the transform that needed to be done on the image
   Returns:
     image: the Tensor representing the image loaded (value in [0,1])
   '''
   image = Image.open(image_name)
   if transform is not None:
     image = toTensor(transform(image))
-  elif scale is not None:
-    cutImage = transforms.Scale(scale)
+  elif size is not None:
+    cutImage = transforms.Resize(size)
     image = toTensor(cutImage(image))
   else:
     image = toTensor(image)
@@ -179,7 +180,7 @@ def train(args):
 
   # Training data
   transform = transforms.Compose([
-    transforms.Scale(args.image_size),
+    transforms.Resize(args.image_size),
     transforms.CenterCrop(args.image_size),
     transforms.ToTensor()
   ])
@@ -225,7 +226,7 @@ def train(args):
     vgg.cuda()
 
   # Target of style
-  style = Variable(normaliseImage(image_loader(args.style_image, scale=args.image_size)))
+  style = Variable(normaliseImage(image_loader(args.style_image, size=args.image_size)))
   style = style.repeat(args.batch_size, 1, 1, 1)
   features_style = vgg(style)
   target_gram_style = [gram_matrix(x) for x in features_style]

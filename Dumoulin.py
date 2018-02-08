@@ -3,7 +3,7 @@ import sys
 import argparse
 import time
 import logging
-import copy
+import math
 from collections import namedtuple
 
 from PIL import Image
@@ -44,19 +44,20 @@ def check_paths(args):
     print(e, flush=True)
     sys.exit(1)
 
-def image_loader(image_name, scale=None, transform=None):
+def image_loader(image_name, size=None, transform=None):
   ''' helper for loading images
   Args:
     image_name: the path to the image
-    height, width: the height and width the loaded image needed to be resized to
+    size: the size of the loaded image needed to be resized to, can be a sequence or int
+    transform: the transform that needed to be done on the image
   Returns:
     image: the Tensor representing the image loaded (value in [0,1])
   '''
   image = Image.open(image_name)
   if transform is not None:
     image = toTensor(transform(image))
-  elif scale is not None:
-    cutImage = transforms.Scale(scale)
+  elif size is not None:
+    cutImage = transforms.Resize(size)
     image = toTensor(cutImage(image))
   else:
     image = toTensor(image)
@@ -140,23 +141,25 @@ class TransformerNetwork(nn.Module):
     # Reflection paddings
     self.pad_4 = nn.ReflectionPad2d(4)
     self.pad_1 = nn.ReflectionPad2d(1)
+    # Upsample
+    self.up = nn.Upsample(scale_factor=2)
 
-  def forward(self, x, training, style=None, weights_of_style=None):
-    y = self.relu(self.in1(self.conv1(self.pad_4(x)), training, style, weights_of_style))
-    _, _, h_size1, w_size1 = y.size()
-    y = self.relu(self.in2(self.conv2(self.pad_1(y)), training, style, weights_of_style))
-    _, _, h_size2, w_size2 = y.size()
-    y = self.relu(self.in3(self.conv3(self.pad_1(y)), training, style, weights_of_style))
-    y = self.res1(y, training, style, weights_of_style)
-    y = self.res2(y, training, style, weights_of_style)
-    y = self.res3(y, training, style, weights_of_style)
-    y = self.res4(y, training, style, weights_of_style)
-    y = self.res5(y, training, style, weights_of_style)
-    upsample1 = nn.Upsample(size=(h_size2, w_size2))
-    y = self.relu(self.in4(self.deconv1(self.pad_1(upsample1(y))), training, style, weights_of_style))
-    upsample2 = nn.Upsample(size=(h_size1, w_size1))
-    y = self.relu(self.in5(self.deconv2(self.pad_1(upsample2(y))), training, style, weights_of_style))
-    y = self.sigmoid(self.in6(self.deconv3(self.pad_4(y)), training, style, weights_of_style))
+  def forward(self, x, training, style=None, weights_of_styles=None):
+    y = self.relu(self.in1(self.conv1(self.pad_4(x)), training, style, weights_of_styles))
+    # _, _, h_size1, w_size1 = y.size()
+    y = self.relu(self.in2(self.conv2(self.pad_1(y)), training, style, weights_of_styles))
+    # _, _, h_size2, w_size2 = y.size()
+    y = self.relu(self.in3(self.conv3(self.pad_1(y)), training, style, weights_of_styles))
+    y = self.res1(y, training, style, weights_of_styles)
+    y = self.res2(y, training, style, weights_of_styles)
+    y = self.res3(y, training, style, weights_of_styles)
+    y = self.res4(y, training, style, weights_of_styles)
+    y = self.res5(y, training, style, weights_of_styles)
+    # upsample1 = nn.Upsample(size=(h_size2, w_size2))
+    y = self.relu(self.in4(self.deconv1(self.pad_1(self.up(y))), training, style, weights_of_styles))
+    # upsample2 = nn.Upsample(size=(h_size1, w_size1))
+    y = self.relu(self.in5(self.deconv2(self.pad_1(self.up(y))), training, style, weights_of_styles))
+    y = self.sigmoid(self.in6(self.deconv3(self.pad_4(y)), training, style, weights_of_styles))
     return y
 
 class ResidualBlock(nn.Module):
@@ -183,9 +186,7 @@ class InstanceNorm(nn.Module):
     super(InstanceNorm, self).__init__()
     self.channels = channels
     self.styles = styles
-    self.norms = []
-    for i in range(styles):
-      self.norms.append(nn.InstanceNorm2d(channels, affine=True))
+    self.norms = nn.ModuleList([nn.InstanceNorm2d(channels, affine=True) for i in range(styles)])
 
   def forward(self, x, training, style=None, weights_of_styles=None):
     if training:
@@ -209,7 +210,7 @@ def train(args):
 
   # Training data
   transform = transforms.Compose([
-    transforms.Scale(args.image_size),
+    transforms.Resize(args.image_size),
     transforms.CenterCrop(args.image_size),
     transforms.ToTensor()
   ])
@@ -257,7 +258,7 @@ def train(args):
   # Target of style
   target_gram_styles = []
   for i in range(no_styles):
-    style = Variable(normaliseImage(image_loader(args.style_images[i], scale=args.image_size)))
+    style = Variable(normaliseImage(image_loader(args.style_images[i], size=args.image_size)))
     style = style.repeat(args.batch_size, 1, 1, 1)
     features_style = vgg(style)
     target_gram_style = [gram_matrix(x) for x in features_style]
@@ -379,7 +380,7 @@ def main(args):
     logging.info('Content weight: ' +  str(args.content_weight) + ' Style weight: ' + str(args.style_weight))
     train(args)
   else:
-    sum = sum(args.weights_of_styles)
+    sum = math.fsum(args.weights_of_styles)
     args.weights_of_styles = [x / sum for x in args.weights_of_styles]
     stylize(args)
 
