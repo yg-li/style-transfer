@@ -3,6 +3,7 @@ import sys
 import argparse
 import time
 import logging
+import math
 
 from PIL import Image
 
@@ -30,6 +31,7 @@ TV_WEIGHT = 1e-6
 # helpers
 toTensor = transforms.ToTensor()
 normaliseImage = transforms.Normalize(MEAN_IMAGE, STD_IMAGE)
+deNormaliseImage = transforms.Normalize([-x for x in MEAN_IMAGE], [1,1,1])
 
 def check_paths(args):
   """ Check if the path exist, if not create one """
@@ -87,29 +89,6 @@ class VGG(nn.Module):
   def forward(self, x):
     return self.slice(x)
 
-# class StyleSwapNet(nn.Module):
-#   '''
-#     Module doing the style-swapping of content and style activations.
-#   '''
-#   def __init__(self, style_activation):
-#     super(StyleSwapNet, self).__init__()
-#     b, ch, h, w = style_activation.size()
-#     self.conv = nn.Conv3d(ch, (h-args.patch_size+1)*(w-args.patch_size+1), kernel_size=(ch, args.patch_size, args.patch_size))
-#     self.deconv = nn.ConvTranspose3d((h-args.patch_size+1)*(w-args.patch_size+1), ch,
-#                                         kernel_size=(ch, args.patch_size, args.patch_size), padding=1)
-#     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! should have everything in CUDA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#     if use_cuda:
-#       self.conv.cuda()
-#       self.deconv.cuda()
-#     for param in self.parameters():
-#       param.requires_grad = False
-#
-#   def forward(self, x):
-#     x = self.conv(x)
-#     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!! argmax !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#     x = self.deconv(x)
-#     return x
-
 class InverseNet(nn.Module):
   '''
     Module for approximating the input of VGG19 given its activation at relu3_1.
@@ -147,24 +126,179 @@ def style_swap(content_activation, style_activation):
     print("ERROR: the layer for content activation and style activation should be the same", flush=True)
     sys.exit(1)
 
-  style_patches_conv = nn.Conv3d(1, (h_s-args.patch_size+1)*(w_s-args.patch_size+1),
-                                 kernel_size=(ch_s, args.patch_size, args.patch_size))
-  for h in range((int) (args.patch_size/2), h_s-(int) (args.patch_size+1/2)):
-    for w in range((int) (args.patch_size/2), w_s-(int) (args.patch_size+1/2)):
+  # Convolutional layer for performing the calculation of cosine measures
+  conv = nn.Conv3d(1, (h_s - int(args.patch_size / 2) * 2) * (w_s - int(args.patch_size / 2) * 2),
+                   kernel_size=(ch_s, args.patch_size, args.patch_size))
+  for param in conv.parameters():
+    param.requires_grad = False
+  if use_cuda:
+    conv.cuda()
 
-  content_activation.data = content_activation.data.unsqueeze_(0)
-  for h in range((int) (args.patch_size/2), h_c-(int) (args.patch_size+1/2)):
-    for w in range((int) (args.patch_size/2), w_c-(int) (args.patch_size+1/2)):
+  for h in range(h_s - int(args.patch_size / 2) * 2):
+    for w in range(w_s - int(args.patch_size / 2) * 2):
+      conv.weight[h * (w_s - int(args.patch_size / 2) * 2) + w, 0, :, :, :] = nn.functional.normalize(
+        style_activation.data[:, :, h:h + args.patch_size, w:w + args.patch_size])
 
+  # Convolution and taking the maximum of cosine mearsures
+  K = conv(content_activation.unsqueeze(0)).squeeze()
+  _, max_index = K.max(0)
+
+  # Constructing target activation
+  overlaps = torch.zeros(h_c, w_c)
+  target_activation = Variable(torch.zeros(content_activation.size()), requires_grad=False)
+  for h in range(h_c - int(args.patch_size / 2) * 2):
+    for w in range(w_c - int(args.patch_size / 2) * 2):
+      s_w = int(max_index[h, w] % (w_s - int(args.patch_size / 2) * 2))
+      s_h = int((max_index[h, w] - s_w) / (w_s - int(args.patch_size / 2) * 2))
+      target_activation[:, :, h:h + args.patch_size, w:w + args.patch_size] = style_activation[:, :,
+                                                                              s_h:s_h + args.patch_size,
+                                                                              s_w:s_w + args.patch_size]
+      overlaps[h:h + args.patch_size, w:w + args.patch_size].add_(1)
+  for h in range(h_c):
+    for w in range(w_c):
+      target_activation[:, :, h, w] = target_activation[:, :, h, w].div(overlaps[h, w])
+
+  return target_activation
+
+def train(args):
+  print('Start training', flush=True)
+
+  # Training data
+  transform = transforms.Compose([
+    transforms.Resize(args.image_size),
+    transforms.CenterCrop(args.image_size),
+    transforms.ToTensor()
+  ])
+  content_dataset = datasets.ImageFolder(args.content_dataset, transform)
+  content_loader = DataLoader(content_dataset, batch_size=int(math.sqrt(args.batch_size)))
+  styel_dataset = datasets.ImageFolder(args.style_dataset, transform)
+  style_loader = DataLoader(styel_dataset, batch_size=int(math.sqrt(args.batch_size)))
+
+  # Networks
+  print('Loading networks', flush=True)
+  inverse_net = InverseNet()
+
+  e_has = 0
+  batch_has = 0
+  checkpoints = os.listdir(args.checkpoint_dir)
+  if len(checkpoints) > 1:
+    if 'log' in checkpoints:
+      checkpoints.remove('log')
+    if '.DS_Store' in checkpoints:
+      checkpoints.remove('.DS_Store')
+    for f in checkpoints:
+      if int(f.split('.')[0].split(b'_')[0]) > e_has:
+        e_has = int(f.split('.')[0].split(b'_')[0])
+    for f in checkpoints:
+      if int(f.split('.')[0].split(b'_')[0]) == e_has and \
+                      len(f.split('.')[0].split(b'_')) == 2 and \
+                      int(f.split('.')[0].split(b'_')[1]) > batch_has:
+        batch_has = int(f.split('.')[0].split(b'_')[1])
+    batch_has = batch_has // args.checkpoint_interval * args.checkpoint_interval
+    print('e_has:', str(e_has), 'batch_has:', str(batch_has))
+
+    if e_has != 0 or batch_has != 0:
+      inverse_net.load_state_dict(torch.load(args.checkpoint_dir + '/' + str(e_has) + '_' + str(batch_has) + '.pth'))
+
+  optimizer = Adam(inverse_net.parameters(), args.lr)
+  mse_loss = nn.MSELoss()
+  vgg = VGG()
+
+  if torch.cuda.device_count() > 1:
+    print('Using', torch.cuda.device_count(), 'GPUs', flush=True)
+    inverse_net = nn.DataParallel(inverse_net)
+    vgg = nn.DataParallel(vgg)
+  if use_cuda:
+    inverse_net.cuda()
+    vgg.cuda()
+
+  # Training epoches
+  for e in range(args.epochs):
+    if e < e_has:
+      print('Epoch', str(e+1), 'has already trained', flush=True)
+      continue
+    print('Start epoch', str(e+1), flush=True)
+    inverse_net.train()
+    agg_loss = 0.0
+    count = 0
+    # Training iteration in one epoch
+    for (batch_id, (c, _)), (_, (s, _) ) in enumerate(zip(content_loader, style_loader)):
+      count += len(c)**2
+      if batch_id < batch_has:
+        if (batch_id+1) % args.log_interval == 0:
+          print('Skipping through batch' , str(batch_id + 1), flush=True)
+        continue
+      batch_has = 0
+
+      if (batch_id + 1) % args.log_interval == 0:
+        utils.save_image(c[0], args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_content.jpg')
+        utils.save_image(s[0], args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_style.jpg')
+
+      optimizer.zero_grad()
+      c = normalize_images(Variable(c, requires_grad=False).type(dtype))
+      s = normalize_images(Variable(s, requires_grad=False).type(dtype))
+      c_activations = vgg(c)
+      s_activations = vgg(s)
+      _, ch, h, w = c_activations.size()
+      target_activations = torch.zeros(args.batch_size, ch, h, w).type(dtype)
+      for i in range(int(math.sqrt(args.batch_size))):
+        for j in range(int(math.sqrt(args.batch_size))):
+          # Unsqueeze here since the indexing would remove the first dimention from Variables
+          target_activations[i * int(math.sqrt(args.batch_size)) + j] = style_swap(c_activations[i].unsqueeze(0),
+                                                                                  s_activations[j].unsqueeze(0))
+      target_activations = Variable(target_activations, requires_grad=False)
+      output = inverse_net(target_activations)
+
+      if (batch_id + 1) % args.log_interval == 0:
+        utils.save_image(deNormaliseImage(output.data[0]).clamp(0,1),
+                         args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_output.jpg')
+
+      tv_loss = TV_WEIGHT * (torch.sum(torch.abs(output[:,:,:,:-1]-output[:,:,:,1:])) +
+                             torch.sum(torch.abs(output[:,:,:-1,:]-output[:,:,1:,:]))) / args.batch_size
+
+      output_activations = vgg(output)
+      activation_loss = mse_loss(target_activations, output_activations)
+
+      total_loss = activation_loss + tv_loss
+      total_loss.backward()
+      optimizer.step()
+
+      agg_loss += total_loss.data[0]
+
+      if (batch_id + 1) % args.log_interval == 0:
+        mesg = '{}\tEpoch {}:\t[{}/{}]\ttotal: {:.6f}\tbatch: {}'.format(
+                time.ctime(), e + 1, count, min(len(content_dataset), len(styel_dataset)),
+                agg_loss / args.log_interval,
+                batch_id + 1)
+        logging.info(mesg)
+        print(mesg, flush=True)
+        agg_loss = 0
+
+      if (batch_id + 1) % args.checkpoint_interval == 0:
+        inverse_net.eval()
+        if use_cuda:
+          inverse_net.cpu()
+        ckpt_model_filename = str(e) + '_' + str(batch_id + 1) + '.pth'
+        ckpt_model_path = os.path.join(args.checkpoint_dir, ckpt_model_filename)
+        torch.save(inverse_net.state_dict(), ckpt_model_path)
+        if use_cuda:
+          inverse_net.cuda()
+        inverse_net.train()
+
+  # save model
+  inverse_net.eval()
+  if use_cuda:
+    inverse_net.cpu()
+  save_model_filename = 'inverse_net.model'
+  save_model_path = os.path.join(args.save_model_dir, save_model_filename)
+  torch.save(inverse_net.state_dict(), save_model_path)
+
+  print('Done, trained model saved at', save_model_path, '\n', flush=True)
 
 def stylize(args):
   print('Start stylizing', flush=True)
-  content_image = image_loader(args.content_image)
-  content_image = content_image.unsqueeze(0)
-  content_image = Variable(content_image, volatile=True)
-  style_image = image_loader(args.style_image)
-  style_image = style_image.unsqueeze(0)
-  style_image = Variable(style_image, volatile=True)
+  content_image = normalize_images(Variable(image_loader(args.content_image).unsqueeze_(0), volatile=True)).type(dtype)
+  style_image = normalize_images(Variable(image_loader(args.style_image).unsqueeze_(0), volatile=True)).type(dtype)
 
   inverse_net = InverseNet()
   inverse_net.load_state_dict(torch.load(args.inverse_net))
@@ -178,12 +312,18 @@ def stylize(args):
   target_activation = style_swap(content_activation, style_activation)
 
   output = inverse_net(target_activation)
-  utils.save_image(output.data[0], args.output_image)
+  utils.save_image(deNormaliseImage(output.data[0]).clamp(0,1), args.output_image)
   print('Done stylization to', args.output_image, '\n', flush=True)
 
 def main(args):
   if args.subcommand is None:
     print('ERROR: specify either train or eval', flush=True)
+    sys.exit(1)
+  elif args.patch_size % 2 == 0:
+    print('ERROR: the patch size must be odd', flush=True)
+    sys.exit(1)
+  elif math.sqrt(args.batch_size) != int(math.sqrt(args.batch_size)):
+    print('ERROR: the batch size must be perfect square', flush=True)
     sys.exit(1)
 
   if args.subcommand == 'train':
