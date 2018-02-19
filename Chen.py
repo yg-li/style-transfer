@@ -6,6 +6,7 @@ import logging
 import math
 
 from PIL import Image
+from PIL import ImageFile
 
 import torch
 from torch.autograd import Variable
@@ -17,6 +18,8 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 import torchvision.utils as utils
 import torchvision.datasets as datasets
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # run on GPU
 use_cuda = torch.cuda.is_available()
@@ -30,10 +33,9 @@ TV_WEIGHT = 1e-6
 
 # helpers
 toTensor = transforms.ToTensor()
-normaliseImage = transforms.Normalize(MEAN_IMAGE, STD_IMAGE)
-deNormaliseImage = transforms.Normalize([-x for x in MEAN_IMAGE], [1,1,1])
 
-def check_paths(args):
+
+def check_paths():
   """ Check if the path exist, if not create one """
   try:
     if not os.path.exists(args.save_model_dir):
@@ -44,39 +46,54 @@ def check_paths(args):
     print(e, flush=True)
     sys.exit(1)
 
+
 def image_loader(image_name, size=None, transform=None):
-  ''' helper for loading images
+  """ Helper for loading images
   Args:
     image_name: the path to the image
     size: the size of the loaded image needed to be resize to, can be a sequence or int
+    transform: the transforms need to apply on the loader image
   Returns:
     image: the Tensor representing the image loaded (value in [0,1])
-  '''
+  """
   image = Image.open(image_name)
   if transform is not None:
     image = toTensor(transform(image))
   elif size is not None:
-    cutImage = transforms.Resize(size)
-    image = toTensor(cutImage(image))
+    cut_image = transforms.Resize(size)
+    image = toTensor(cut_image(image))
   else:
     image = toTensor(image)
   return image.type(dtype)
 
+
 def normalize_images(images):
   """ Normalised a batch of images wrt the Imagenet dataset """
   # normalize using imagenet mean and std
-  mean = images.data.new(images.data.size())
-  std = images.data.new(images.data.size())
+  mean = torch.zeros(images.data.size()).type(dtype)
+  std = torch.zeros(images.data.size()).type(dtype)
   for i in range(3):
     mean[:, i, :, :] = MEAN_IMAGE[i]
     std[:, i, :, :] = STD_IMAGE[i]
-  return (images - Variable(mean)) / Variable(std)
+  return (images - Variable(mean, requires_grad=False)) / Variable(std, requires_grad=False)
+
+
+def denormalize_image(image):
+  """ Denormalised a batch of images wrt the Imagenet dataset """
+  # denormalize using imagenet mean and std
+  mean = torch.zeros(image.size()).type(dtype)
+  std = torch.zeros(image.size()).type(dtype)
+  for i in range(3):
+    mean[i, :, :] = MEAN_IMAGE[i]
+    std[i, :, :] = STD_IMAGE[i]
+  return (image * std) + mean
+
 
 class VGG(nn.Module):
-  '''
+  """
     Module based on pre-trained VGG 19 for extracting high level features of image.
     Use relu3_1 for style-swapping and loss calculation.
-  '''
+  """
   def __init__(self):
     super(VGG, self).__init__()
     vgg = models.vgg19(pretrained=True).features
@@ -89,11 +106,12 @@ class VGG(nn.Module):
   def forward(self, x):
     return self.slice(x)
 
+
 class InverseNet(nn.Module):
-  '''
+  """
     Module for approximating the input of VGG19 given its activation at relu3_1.
     The inverse is neither injective nor surjective.
-  '''
+  """
   def __init__(self):
     super(InverseNet, self).__init__()
     self.conv1 = nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1)
@@ -119,6 +137,7 @@ class InverseNet(nn.Module):
     x = self.conv5(x)
     return x
 
+
 def style_swap(content_activation, style_activation):
   _, ch_c, h_c, w_c = content_activation.size()
   _, ch_s, h_s, w_s = style_activation.size()
@@ -140,19 +159,19 @@ def style_swap(content_activation, style_activation):
         style_activation.data[:, :, h:h + args.patch_size, w:w + args.patch_size])
 
   # Convolution and taking the maximum of cosine mearsures
-  K = conv(content_activation.unsqueeze(0)).squeeze()
-  _, max_index = K.max(0)
+  k = conv(content_activation.unsqueeze(0)).squeeze()
+  _, max_index = k.max(0)
 
   # Constructing target activation
-  overlaps = torch.zeros(h_c, w_c)
-  target_activation = Variable(torch.zeros(content_activation.size()), requires_grad=False)
+  overlaps = torch.zeros(h_c, w_c).type(dtype)
+  target_activation = Variable(torch.zeros(content_activation.size()).type(dtype), requires_grad=False)
   for h in range(h_c - int(args.patch_size / 2) * 2):
     for w in range(w_c - int(args.patch_size / 2) * 2):
-      s_w = int(max_index[h, w] % (w_s - int(args.patch_size / 2) * 2))
-      s_h = int((max_index[h, w] - s_w) / (w_s - int(args.patch_size / 2) * 2))
-      target_activation[:, :, h:h + args.patch_size, w:w + args.patch_size] = style_activation[:, :,
-                                                                              s_h:s_h + args.patch_size,
-                                                                              s_w:s_w + args.patch_size]
+      s_w = int(max_index.data[h, w] % (w_s - int(args.patch_size / 2) * 2))
+      s_h = int((max_index.data[h, w] - s_w) / (w_s - int(args.patch_size / 2) * 2))
+      target_activation[:, :, h:h + args.patch_size, w:w + args.patch_size] = \
+        target_activation[:, :, h:h + args.patch_size, w:w + args.patch_size] + \
+        style_activation[:, :, s_h:s_h + args.patch_size, s_w:s_w + args.patch_size]
       overlaps[h:h + args.patch_size, w:w + args.patch_size].add_(1)
   for h in range(h_c):
     for w in range(w_c):
@@ -160,7 +179,8 @@ def style_swap(content_activation, style_activation):
 
   return target_activation
 
-def train(args):
+
+def train():
   print('Start training', flush=True)
 
   # Training data
@@ -170,9 +190,9 @@ def train(args):
     transforms.ToTensor()
   ])
   content_dataset = datasets.ImageFolder(args.content_dataset, transform)
-  content_loader = DataLoader(content_dataset, batch_size=int(math.sqrt(args.batch_size)))
+  content_loader = DataLoader(content_dataset, batch_size=int(math.sqrt(args.batch_size)), drop_last=True)
   styel_dataset = datasets.ImageFolder(args.style_dataset, transform)
-  style_loader = DataLoader(styel_dataset, batch_size=int(math.sqrt(args.batch_size)))
+  style_loader = DataLoader(styel_dataset, batch_size=int(math.sqrt(args.batch_size)), drop_last=True)
 
   # Networks
   print('Loading networks', flush=True)
@@ -187,13 +207,13 @@ def train(args):
     if '.DS_Store' in checkpoints:
       checkpoints.remove('.DS_Store')
     for f in checkpoints:
-      if int(f.split('.')[0].split(b'_')[0]) > e_has:
-        e_has = int(f.split('.')[0].split(b'_')[0])
+      if int(f.split('.')[0].split('_')[0]) > e_has:
+        e_has = int(f.split('.')[0].split('_')[0])
     for f in checkpoints:
-      if int(f.split('.')[0].split(b'_')[0]) == e_has and \
-                      len(f.split('.')[0].split(b'_')) == 2 and \
-                      int(f.split('.')[0].split(b'_')[1]) > batch_has:
-        batch_has = int(f.split('.')[0].split(b'_')[1])
+      if int(f.split('.')[0].split('_')[0]) == e_has and \
+                      len(f.split('.')[0].split('_')) == 2 and \
+                      int(f.split('.')[0].split('_')[1]) > batch_has:
+        batch_has = int(f.split('.')[0].split('_')[1])
     batch_has = batch_has // args.checkpoint_interval * args.checkpoint_interval
     print('e_has:', str(e_has), 'batch_has:', str(batch_has))
 
@@ -222,11 +242,11 @@ def train(args):
     agg_loss = 0.0
     count = 0
     # Training iteration in one epoch
-    for (batch_id, (c, _)), (_, (s, _) ) in enumerate(zip(content_loader, style_loader)):
-      count += len(c)**2
+    for batch_id, ((c, _), (s, _)) in enumerate(zip(content_loader, style_loader)):
+      count += len(c)
       if batch_id < batch_has:
         if (batch_id+1) % args.log_interval == 0:
-          print('Skipping through batch' , str(batch_id + 1), flush=True)
+          print('Skipping through batch', str(batch_id + 1), flush=True)
         continue
       batch_has = 0
 
@@ -234,30 +254,33 @@ def train(args):
         utils.save_image(c[0], args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_content.jpg')
         utils.save_image(s[0], args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_style.jpg')
 
-      optimizer.zero_grad()
-      c = normalize_images(Variable(c, requires_grad=False).type(dtype))
-      s = normalize_images(Variable(s, requires_grad=False).type(dtype))
-      c_activations = vgg(c)
-      s_activations = vgg(s)
+      c = Variable(c.type(dtype), requires_grad=False)
+      s = Variable(s.type(dtype), requires_grad=False)
+      c_activations = vgg(normalize_images(c))
+      s_activations = vgg(normalize_images(s))
       _, ch, h, w = c_activations.size()
-      target_activations = torch.zeros(args.batch_size, ch, h, w).type(dtype)
+      target_activations = Variable(torch.zeros(args.batch_size, ch, h, w).type(dtype), requires_grad=False)
       for i in range(int(math.sqrt(args.batch_size))):
         for j in range(int(math.sqrt(args.batch_size))):
           # Unsqueeze here since the indexing would remove the first dimention from Variables
           target_activations[i * int(math.sqrt(args.batch_size)) + j] = style_swap(c_activations[i].unsqueeze(0),
-                                                                                  s_activations[j].unsqueeze(0))
-      target_activations = Variable(target_activations, requires_grad=False)
+                                                                                   s_activations[j].unsqueeze(0))
+
+      optimizer.zero_grad()
       output = inverse_net(target_activations)
 
       if (batch_id + 1) % args.log_interval == 0:
-        utils.save_image(deNormaliseImage(output.data[0]).clamp(0,1),
+        utils.save_image(denormalize_image(output.data[0]),
                          args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_output.jpg')
 
-      tv_loss = TV_WEIGHT * (torch.sum(torch.abs(output[:,:,:,:-1]-output[:,:,:,1:])) +
-                             torch.sum(torch.abs(output[:,:,:-1,:]-output[:,:,1:,:]))) / args.batch_size
+      tv_loss = TV_WEIGHT * (torch.sum(torch.abs(output[:, :, :, :-1]-output[:, :, :, 1:])) +
+                             torch.sum(torch.abs(output[:, :, :-1, :]-output[:, :, 1:, :])))
 
       output_activations = vgg(output)
-      activation_loss = mse_loss(target_activations, output_activations)
+      activation_loss = mse_loss(output_activations, target_activations)
+
+      # print('{}\tBatch {}\tac_loss {}\ttv_loss {}'.format(
+      #   time.ctime(), batch_id, activation_loss.data[0], tv_loss.data[0]), flush=True)
 
       total_loss = activation_loss + tv_loss
       total_loss.backward()
@@ -295,10 +318,11 @@ def train(args):
 
   print('Done, trained model saved at', save_model_path, '\n', flush=True)
 
-def stylize(args):
+
+def stylize():
   print('Start stylizing', flush=True)
-  content_image = normalize_images(Variable(image_loader(args.content_image).unsqueeze_(0), volatile=True)).type(dtype)
-  style_image = normalize_images(Variable(image_loader(args.style_image).unsqueeze_(0), volatile=True)).type(dtype)
+  content_image = Variable(image_loader(args.content_image).unsqueeze_(0).type(dtype), volatile=True)
+  style_image = Variable(image_loader(args.style_image).unsqueeze_(0).type(dtype), volatile=True)
 
   inverse_net = InverseNet()
   inverse_net.load_state_dict(torch.load(args.inverse_net))
@@ -307,15 +331,16 @@ def stylize(args):
     inverse_net.cuda()
     vgg.cuda()
 
-  content_activation = vgg(content_image)
-  style_activation = vgg(style_image)
+  content_activation = vgg(normalize_images(content_image))
+  style_activation = vgg(normalize_images(style_image))
   target_activation = style_swap(content_activation, style_activation)
 
   output = inverse_net(target_activation)
-  utils.save_image(deNormaliseImage(output.data[0]).clamp(0,1), args.output_image)
+  utils.save_image(denormalize_image(output.data[0]), args.output_image)
   print('Done stylization to', args.output_image, '\n', flush=True)
 
-def main(args):
+
+def main():
   if args.subcommand is None:
     print('ERROR: specify either train or eval', flush=True)
     sys.exit(1)
@@ -327,54 +352,55 @@ def main(args):
     sys.exit(1)
 
   if args.subcommand == 'train':
-    check_paths(args)
+    check_paths()
     if 'inverse_net.model' in os.listdir(args.save_model_dir):
       print('Already trained the inverse net\n', flush=True)
       return
     logging.basicConfig(filename=args.checkpoint_dir + '/log', level=logging.INFO)
-    logging.info('Patch size: ' +  str(args.patch_size))
-    train(args)
+    logging.info('Patch size: ' + str(args.patch_size))
+    train()
   else:
-    stylize(args)
-  
+    stylize()
+
+
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   subparsers = parser.add_subparsers(dest='subcommand')
 
   train_parser = subparsers.add_parser('train', help='parser for training parameters')
   train_parser.add_argument('--content-dataset', type=str, required=True,
-                                help='path to content dataset')
+                            help='path to content dataset')
   train_parser.add_argument('--style-dataset', type=str, required=True,
-                                help='paths to style dataset')
+                            help='paths to style dataset')
   train_parser.add_argument('--save-model-dir', type=str, required=True,
-                                help='path to folder where trained model will be saved.')
+                            help='path to folder where trained model will be saved.')
   train_parser.add_argument('--checkpoint-dir', type=str, required=True,
-                                help='path to folder where checkpoints of trained models will be saved')
+                            help='path to folder where checkpoints of trained models will be saved')
   train_parser.add_argument('--image-size', type=int, default=256,
-                                help='size of training images, default is 256 X 256')
+                            help='size of training images, default is 256 X 256')
   train_parser.add_argument('--epochs', type=int, default=2,
-                                help='number of training epochs, default is 2')
+                            help='number of training epochs, default is 2')
   train_parser.add_argument('--batch-size', type=int, default=4,
-                                help='batch size for training, default is 4, has to be square of a natural number')
+                            help='batch size for training, default is 4, has to be square of a natural number')
   train_parser.add_argument('--patch-size', type=int, default=3,
-                                help='size of patches for activations, default is 3')
+                            help='size of patches for activations, default is 3')
   train_parser.add_argument('--lr', type=float, default=1e-3,
-                                help='learning rate, default is 1e-3')
+                            help='learning rate, default is 1e-3')
   train_parser.add_argument('--log-interval', type=int, default=500,
-                                help='number of images after which the training loss is logged, default is 500')
+                            help='number of images after which the training loss is logged, default is 500')
   train_parser.add_argument('--checkpoint-interval', type=int, default=2000,
-                                help='number of batches after which a checkpoint of the trained model will be created')
+                            help='number of batches after which a checkpoint of the trained model will be created')
 
   eval_parser = subparsers.add_parser('eval', help='parser for stylizing arguments')
   eval_parser.add_argument('--content-image', type=str, required=True,
-                               help='path to the content image')
+                           help='path to the content image')
   eval_parser.add_argument('--style-image', type=str, required=True,
                            help='path to the style image')
   eval_parser.add_argument('--output-image', type=str, required=True,
-                               help='path for saving the output image')
+                           help='path for saving the output image')
   eval_parser.add_argument('--inverse-net', type=str, required=True,
-                               help='saved inverse net to be used for stylizing the image')
+                           help='saved inverse net to be used for stylizing the image')
 
   args = parser.parse_args()
 
-  main(args)
+  main()

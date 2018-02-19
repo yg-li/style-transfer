@@ -65,12 +65,12 @@ def image_loader(image_name, size=None, transform=None):
 def normalize_images(images):
   """ Normalised a batch of images wrt the Imagenet dataset """
   # normalize using imagenet mean and std
-  mean = images.data.new(images.data.size())
-  std = images.data.new(images.data.size())
+  mean = torch.zeros(images.data.size()).type(dtype)
+  std = torch.zeros(images.data.size()).type(dtype)
   for i in range(3):
     mean[:, i, :, :] = MEAN_IMAGE[i]
     std[:, i, :, :] = STD_IMAGE[i]
-  return (images - Variable(mean)) / Variable(std)
+  return (images - Variable(mean, requires_grad=False)) / Variable(std, requires_grad=False)
 
 class LossNetwork(nn.Module):
   ''' Module based on pre-trained VGG 16 for extracting high level features of image

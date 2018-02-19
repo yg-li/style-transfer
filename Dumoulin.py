@@ -66,12 +66,12 @@ def image_loader(image_name, size=None, transform=None):
 def normalize_images(images):
   """ Normalised a batch of images wrt the Imagenet dataset """
   # normalize using imagenet mean and std
-  mean = images.data.new(images.data.size())
-  std = images.data.new(images.data.size())
+  mean = torch.zeros(images.data.size()).type(dtype)
+  std = torch.zeros(images.data.size()).type(dtype)
   for i in range(3):
     mean[:, i, :, :] = MEAN_IMAGE[i]
     std[:, i, :, :] = STD_IMAGE[i]
-  return (images - Variable(mean)) / Variable(std)
+  return (images - Variable(mean, requires_grad=False)) / Variable(std, requires_grad=False)
 
 class LossNetwork(nn.Module):
   ''' Module based on pre-trained VGG 16 for extracting high level features of image
@@ -373,7 +373,8 @@ def main(args):
   if args.subcommand == 'train':
     args.checkpoint_dir += '/' + '_'.join([x.split('/')[-1].split('.')[0] for x in args.style_images])
     check_paths(args)
-    if '_'.join([x.split('/')[-1].split('.')[0] for x in args.style_images]) + '.model' in os.listdir(args.save_model_dir):
+    if '_'.join([x.split('/')[-1].split('.')[0] for x in args.style_images]) + '.model' \
+            in os.listdir(args.save_model_dir):
       print('Already trained for this style\n', flush=True)
       return
     logging.basicConfig(filename=args.checkpoint_dir + '/log', level=logging.INFO)

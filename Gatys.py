@@ -29,10 +29,18 @@ dtype = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
 
 # Mean and Standard deviation of the Imagenet dataset
 MEAN_IMAGE = [0.485, 0.456, 0.406]
+STD_IMAGE = [0.229, 0.224, 0.225]
 # helpers
 toTensor = transforms.ToTensor()
-normaliseImage = transforms.Normalize(MEAN_IMAGE, [1,1,1])
-deNormaliseImage = transforms.Normalize([-x for x in MEAN_IMAGE], [1,1,1])
+normaliseImage = transforms.Normalize(MEAN_IMAGE, STD_IMAGE)
+
+def denormaliseImage(image):
+  mean = torch.zeros(image.size()).type(dtype)
+  std = torch.zeros(image.size()).type(dtype)
+  for i in range(3):
+    mean[i, :, :] = MEAN_IMAGE[i]
+    std[i, :, :] = STD_IMAGE[i]
+  return (image * std) + mean
 
 def image_loader(image_name, height=None, width=None):
   """ helper for loading images
@@ -135,9 +143,10 @@ def transfer(content_img, style_img, input_img, output_dir, num_steps=NUM_STEPS)
     def closure():
       # Clamp the image to be in ([0,1] - MEAN_IMAGE)
       for i in range(3):
-        input_param.data[0][i].clamp_(0-MEAN_IMAGE[i], 1-MEAN_IMAGE[i])
+        input_param.data[0][i].clamp_((0-MEAN_IMAGE[i])/STD_IMAGE[i], (1-MEAN_IMAGE[i])/STD_IMAGE[i])
       if run[0] % SHOW_STEPS == 0:
-        utils.save_image(deNormaliseImage(copy.deepcopy(input_param.data[0])).clamp(0, 1), output_dir + str(run[0]) + '.jpg')
+        utils.save_image(deNormaliseImage(input_param.data[0]),
+                         output_dir + str(run[0]) + '.jpg')
 
       optimizer.zero_grad()
       feature_content, feature_style = lossnet(input_param)
@@ -157,7 +166,8 @@ def transfer(content_img, style_img, input_img, output_dir, num_steps=NUM_STEPS)
 
       run[0] += 1
       if run[0] % SHOW_STEPS == 0:
-        mesg = 'run {}:\nStyle Loss : {:4f} Content Loss: {:4f}'.format(run[0], style_loss.data[0], content_loss.data[0])
+        mesg = 'run {}:\nStyle Loss : {:4f} Content Loss: {:4f}'.format(run[0],
+                                                                        style_loss.data[0], content_loss.data[0])
         logging.info(mesg)
         print(mesg, flush=True)
 
