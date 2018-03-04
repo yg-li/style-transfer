@@ -1,8 +1,9 @@
-import wx
-import wx.lib.masked
 import io
 import os
 import math
+
+import wx
+import wx.lib.masked
 
 from PIL import Image
 
