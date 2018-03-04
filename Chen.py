@@ -333,9 +333,9 @@ def stylize():
 
   content_activation = vgg(normalize_images(content_image))
   style_activation = vgg(normalize_images(style_image))
-  target_activation = style_swap(content_activation, style_activation)
+  # target_activation = style_swap(content_activation, style_activation)
 
-  output = inverse_net(target_activation)
+  output = inverse_net(content_activation) #target_activation)
   utils.save_image(denormalize_image(output.data[0]), args.output_image)
   print('Done stylization to', args.output_image, '\n', flush=True)
 
@@ -344,12 +344,12 @@ def main():
   if args.subcommand is None:
     print('ERROR: specify either train or eval', flush=True)
     sys.exit(1)
-  elif args.patch_size % 2 == 0:
-    print('ERROR: the patch size must be odd', flush=True)
-    sys.exit(1)
-  elif math.sqrt(args.batch_size) != int(math.sqrt(args.batch_size)):
-    print('ERROR: the batch size must be perfect square', flush=True)
-    sys.exit(1)
+  # elif args.patch_size % 2 == 0:
+  #   print('ERROR: the patch size must be odd', flush=True)
+  #   sys.exit(1)
+  # elif math.sqrt(args.batch_size) != int(math.sqrt(args.batch_size)):
+  #   print('ERROR: the batch size must be perfect square', flush=True)
+  #   sys.exit(1)
 
   if args.subcommand == 'train':
     check_paths()
@@ -400,6 +400,8 @@ if __name__ == '__main__':
                            help='path for saving the output image')
   eval_parser.add_argument('--inverse-net', type=str, required=True,
                            help='saved inverse net to be used for stylizing the image')
+  eval_parser.add_argument('--patch-size', type=int, default=3,
+                            help='size of patches for activations, default is 3')
 
   args = parser.parse_args()
 
