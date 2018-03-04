@@ -3,8 +3,6 @@ import os
 import math
 
 import wx
-import wx.lib.masked
-
 from PIL import Image
 
 import torch
@@ -146,6 +144,8 @@ class MainWindow(wx.Frame):
     def onNum(self, e):
       c = e.GetKeyCode()
       text = e.GetEventObject().GetValue()
+      if c == 13:
+        self.onStylize(None)
       if len(text) < 11 and chr(c) in num_accept_chars and (chr(c) != '.' or '.' not in text):
         e.Skip()
       else:
