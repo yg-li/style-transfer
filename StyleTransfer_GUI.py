@@ -3,6 +3,7 @@ import os
 import math
 
 import wx
+import cv2
 from PIL import Image
 
 import torch
@@ -30,9 +31,6 @@ class MainWindow(wx.Frame):
       self.sizer = wx.BoxSizer(wx.VERTICAL)
 
       # Part for displaying style images and taking in weights
-      self.sizer.Add(wx.StaticText(self, label='Please specify the weights (positive numbers) of each style you want'
-                                               ' to be seen in the result:'),
-                     0, wx.ALIGN_CENTER)
       self.input_panel = wx.Panel(self, style=wx.TAB_TRAVERSAL)
       self.input_panel.style_sizer = wx.FlexGridSizer(2, 5, 3, 0)
       imgs = sorted(os.listdir(os.getcwd() + '/images/style_images'))
@@ -50,19 +48,28 @@ class MainWindow(wx.Frame):
         self.input_panel.style_sizer.Add(self.weights[i], 1, wx.EXPAND)
       self.sizer.Add(self.input_panel.style_sizer, 1, wx.EXPAND)
 
+      self.sizer.Add(wx.StaticText(self, label='Please specify the weights (positive numbers) of each style you want'
+                                               ' to be seen in the result:'),
+                     0, wx.ALIGN_CENTER)
+
       # Part for choosing content image
       dc = wx.MemoryDC(wx.Bitmap(256, 256))
       text = 'Click here to choose the input image'
       tw, th = dc.GetTextExtent(text)
       dc.DrawText(text, (256 - tw) / 2, (256 - th) / 2)
+      dc.DrawLineList(((0, 0, 0, 255), (0, 0, 255, 0), (255, 255, 0, 255), (255, 255, 255, 0)))
       self.image_ctrl = wx.StaticBitmap(self, bitmap=dc.GetAsBitmap())
       self.image_ctrl.Bind(wx.EVT_LEFT_UP, self.onImage)
       self.sizer.Add(self.image_ctrl, 0, wx.CENTER)
 
+      self.capture_button = wx.Button(self, label='Capture camera image', size=(256,40))
+      self.capture_button.Bind(wx.EVT_BUTTON, self.onCapture)
+      self.sizer.Add(self.capture_button, 0, wx.CENTER)
+
       # Part for displaying the result
-      self.button = wx.Button(self, label='Stylize', size=(256, 40))
-      self.button.Bind(wx.EVT_BUTTON, self.onStylize)
-      self.sizer.Add(self.button, 0, wx.CENTER)
+      self.styleize_button = wx.Button(self, label='Stylize', size=(256, 40))
+      self.styleize_button.Bind(wx.EVT_BUTTON, self.onStylize)
+      self.sizer.Add(self.styleize_button, 0, wx.CENTER, 20)
 
       self.SetSizer(self.sizer)
       self.SetAutoLayout(1)
@@ -70,6 +77,53 @@ class MainWindow(wx.Frame):
 
       self.makeMenuBar()
       self.Center()
+
+    def onCapture(self, e):
+      self.view = wx.Frame(self, title='Capture image')
+      exit_id = wx.NewId()
+      self.view.Bind(wx.EVT_MENU, self.onW, id=exit_id)
+      self.view.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_CTRL, ord('W'), exit_id),
+                                                         (wx.ACCEL_CTRL, ord('Q'), exit_id)]))
+      self.view.Bind(wx.EVT_CLOSE, self.onCloseCap)
+
+      sizer = wx.BoxSizer(wx.VERTICAL)
+      self.frame_ctrl = wx.StaticBitmap(self.view, bitmap=wx.Bitmap(800,500))
+      sizer.Add(self.frame_ctrl, 1, wx.EXPAND)
+      button = wx.Button(self.view, label='Capture')
+      button.Bind(wx.EVT_BUTTON, self.onCap)
+      sizer.Add(button, 0, wx.EXPAND)
+
+      self.view.SetSizer(sizer)
+      self.view.SetAutoLayout(1)
+      sizer.Fit(self.view)
+
+      self.stream = io.BytesIO()
+      self.cap = cv2.VideoCapture(0)
+      self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+      self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 500)
+
+      self.timer = wx.Timer(self.view)
+      self.view.Bind(wx.EVT_TIMER, self.onNextImage, self.timer)
+      self.timer.Start(30)
+
+      self.view.Show()
+      self.view.Center()
+
+    def onNextImage(self, e):
+      _, image = self.cap.read()
+      self.stream = io.BytesIO()
+      Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)).save(self.stream, format='JPEG')
+      self.frame_ctrl.SetBitmap(wx.Bitmap(wx.Image(io.BytesIO(self.stream.getvalue())).Scale(800, 500)))
+    
+    def onCap(self, e):
+      self.image_ctrl.SetBitmap(wx.Bitmap(wx.Image(io.BytesIO(self.stream.getvalue())).Scale(256, 256)))
+      self.content = self.stream.getvalue()
+      e.GetEventObject().GetParent().Close()
+
+    def onCloseCap(self, e):
+      self.timer.Destroy()
+      self.cap.release()
+      e.Skip()
 
     def onFocus(self, e):
       if e.GetEventObject().GetValue() == '0':
