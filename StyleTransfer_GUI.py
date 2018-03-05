@@ -33,21 +33,22 @@ class MainWindow(wx.Frame):
       self.sizer.Add(wx.StaticText(self, label='Please specify the weights (positive numbers) of each style you want'
                                                ' to be seen in the result:'),
                      0, wx.ALIGN_CENTER)
-      self.style_sizer = wx.FlexGridSizer(2, 5, 5, 0)
+      self.input_panel = wx.Panel(self, style=wx.TAB_TRAVERSAL)
+      self.input_panel.style_sizer = wx.FlexGridSizer(2, 5, 3, 0)
       imgs = sorted(os.listdir(os.getcwd() + '/images/style_images'))
       if '.DS_Store' in imgs:
         imgs.remove('.DS_Store')
       for img in imgs:
         image = wx.Image(os.getcwd() + '/images/style_images/' + img, wx.BITMAP_TYPE_ANY).Scale(200, 200)
-        self.style_sizer.Add(wx.StaticBitmap(self, bitmap=wx.Bitmap(image)), 1, wx.EXPAND)
+        self.input_panel.style_sizer.Add(wx.StaticBitmap(self, bitmap=wx.Bitmap(image)), 1, wx.EXPAND)
       self.weights = []
       for i in range(len(imgs)):
         self.weights.append(wx.TextCtrl(self, value='0', style=wx.TE_CENTER))
         self.weights[i].Bind(wx.EVT_CHAR, self.onNum)
         self.weights[i].Bind(wx.EVT_SET_FOCUS, self.onFocus)
         self.weights[i].Bind(wx.EVT_KILL_FOCUS, self.lostFocus)
-        self.style_sizer.Add(self.weights[i], 1, wx.EXPAND)
-      self.sizer.Add(self.style_sizer, 1, wx.EXPAND)
+        self.input_panel.style_sizer.Add(self.weights[i], 1, wx.EXPAND)
+      self.sizer.Add(self.input_panel.style_sizer, 1, wx.EXPAND)
 
       # Part for choosing content image
       dc = wx.MemoryDC(wx.Bitmap(256, 256))
