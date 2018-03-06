@@ -7,6 +7,7 @@ Implementations of 4 proposed neural style transfer methods in PyTorch. GUI is p
 * TorchVision 0.2.0
 * PIL 4.3.0
 * wxPython 4.0.1
+* OpenCV-Python 3.4.0.12
 
 ## Reference
 * L. A. Gatys, and A. S. Ecker, M. Bethge. Image Style Transfer Using Convolutional Neural Networks. In _Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition_, pages 2414–2423, 2016.
