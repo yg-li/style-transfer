@@ -72,8 +72,8 @@ def image_loader(image_name, size=None, transform=None):
 def normalize_images(images):
   """ Normalised a batch of images wrt the Imagenet dataset """
   # normalize using imagenet mean and std
-  mean = torch.zeros(images.data.size()).type(dtype)
-  std = torch.zeros(images.data.size()).type(dtype)
+  mean = torch.zeros(images.size()).type(dtype)
+  std = torch.zeros(images.size()).type(dtype)
   for i in range(3):
     mean[:, i, :, :] = MEAN_IMAGE[i]
     std[:, i, :, :] = STD_IMAGE[i]
@@ -157,12 +157,12 @@ def style_swap(content_activation, style_activation):
 
   for h in range(h_s - int(args.patch_size / 2) * 2):
     for w in range(w_s - int(args.patch_size / 2) * 2):
-      conv.weight[h * (w_s - int(args.patch_size / 2) * 2) + w, 0, :, :, :] = nn.functional.normalize(
+      conv.weight.data[h * (w_s - int(args.patch_size / 2) * 2) + w, 0, :, :, :] = nn.functional.normalize(
         style_activation.data[:, :, h:h + args.patch_size, w:w + args.patch_size])
 
   # Convolution and taking the maximum of cosine mearsures
-  k = conv(content_activation.unsqueeze(0)).squeeze()
-  _, max_index = k.max(0)
+  k = conv(content_activation.unsqueeze(0))
+  _, max_index = k.squeeze().max(0)
 
   # Constructing target activation
   overlaps = torch.zeros(h_c, w_c).type(dtype)
@@ -171,13 +171,13 @@ def style_swap(content_activation, style_activation):
     for w in range(w_c - int(args.patch_size / 2) * 2):
       s_w = int(max_index.data[h, w] % (w_s - int(args.patch_size / 2) * 2))
       s_h = int((max_index.data[h, w] - s_w) / (w_s - int(args.patch_size / 2) * 2))
-      target_activation[:, :, h:h + args.patch_size, w:w + args.patch_size] = \
-        target_activation[:, :, h:h + args.patch_size, w:w + args.patch_size] + \
-        style_activation[:, :, s_h:s_h + args.patch_size, s_w:s_w + args.patch_size]
+      target_activation.data[:, :, h:h + args.patch_size, w:w + args.patch_size] = \
+        target_activation.data[:, :, h:h + args.patch_size, w:w + args.patch_size] + \
+        style_activation.data[:, :, s_h:s_h + args.patch_size, s_w:s_w + args.patch_size]
       overlaps[h:h + args.patch_size, w:w + args.patch_size].add_(1)
   for h in range(h_c):
     for w in range(w_c):
-      target_activation[:, :, h, w] = target_activation[:, :, h, w].div(overlaps[h, w])
+      target_activation.data[:, :, h, w] = target_activation.data[:, :, h, w].div(overlaps[h, w])
 
   return target_activation
 
@@ -256,19 +256,20 @@ def train():
         utils.save_image(c[0], args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_content.jpg')
         utils.save_image(s[0], args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_style.jpg')
 
-      c = Variable(c.type(dtype), requires_grad=False)
-      s = Variable(s.type(dtype), requires_grad=False)
+      optimizer.zero_grad()
+
+      c = Variable(c, requires_grad=False).type(dtype)
+      s = Variable(s, requires_grad=False).type(dtype)
       c_activations = vgg(normalize_images(c))
       s_activations = vgg(normalize_images(s))
       _, ch, h, w = c_activations.size()
-      target_activations = Variable(torch.zeros(args.batch_size, ch, h, w).type(dtype), requires_grad=False)
+      target_activations = Variable(torch.zeros(args.batch_size, ch, h, w), requires_grad=False).type(dtype)
       for i in range(int(math.sqrt(args.batch_size))):
         for j in range(int(math.sqrt(args.batch_size))):
           # Unsqueeze here since the indexing would remove the first dimention from Variables
           target_activations[i * int(math.sqrt(args.batch_size)) + j] = style_swap(c_activations[i].unsqueeze(0),
                                                                                    s_activations[j].unsqueeze(0))
 
-      optimizer.zero_grad()
       output = inverse_net(target_activations)
 
       if (batch_id + 1) % args.log_interval == 0:

@@ -1,6 +1,7 @@
 import io
 import os
 import math
+import sys
 
 import wx
 import cv2
@@ -11,10 +12,15 @@ from torch.autograd import Variable
 from torch import nn
 
 import torchvision.transforms as transforms
+import torchvision.models as models
 
 # run on GPU
 use_cuda = torch.cuda.is_available()
 dtype = torch.cuda.FloatTensor if use_cuda else torch.FloatTensor
+
+# Mean and Standard deviation of the Imagenet dataset
+MEAN_IMAGE = [0.485, 0.456, 0.406]
+STD_IMAGE = [0.229, 0.224, 0.225]
 
 # helpers
 toTensor = transforms.ToTensor()
@@ -23,9 +29,12 @@ toPILImage = transforms.ToPILImage()
 num_accept_chars = "1234567890."
 
 
-class MainWindow(wx.Frame):
+class Dumoulin_W(wx.Frame):
     def __init__(self, parent, title):
-      super(MainWindow, self).__init__(parent, title=title)
+      super(Dumoulin_W, self).__init__(parent, title=title)
+      exit_id = wx.NewId()
+      self.Bind(wx.EVT_MENU, self.onW, id=exit_id)
+      self.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_CTRL, ord('W'), exit_id)]))
       self.style_model = None
       self.content = None
       self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -54,7 +63,8 @@ class MainWindow(wx.Frame):
 
       # Part for choosing content image
       dc = wx.MemoryDC(wx.Bitmap(256, 256))
-      text = 'Click here to choose the input image'
+      dc.SetFont(wx.Font(16, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+      text = 'Click to choose content image'
       tw, th = dc.GetTextExtent(text)
       dc.DrawText(text, (256 - tw) / 2, (256 - th) / 2)
       dc.DrawLineList(((0, 0, 0, 255), (0, 0, 255, 0), (255, 255, 0, 255), (255, 255, 255, 0)))
@@ -75,7 +85,6 @@ class MainWindow(wx.Frame):
       self.SetAutoLayout(1)
       self.sizer.Fit(self)
 
-      self.makeMenuBar()
       self.Center()
 
     def onCapture(self, e):
@@ -206,14 +215,6 @@ class MainWindow(wx.Frame):
       else:
         return False
 
-    def onAbout(self, e):
-      dlg = wx.MessageDialog(self, "App for doing style transfers", "About Style Transfer")
-      dlg.ShowModal()
-      dlg.Destroy()
-
-    def onExit(self, e):
-      self.Close()
-
     def stylize(self, weights):
       content_image = self.image_loader()
       content_image = content_image.unsqueeze(0)
@@ -249,21 +250,275 @@ class MainWindow(wx.Frame):
         image = toTensor(image)
       return image.type(dtype)
 
-    def makeMenuBar(self):
-      # Setting up the menu
-      filemenu = wx.Menu()
-      menuAbout = filemenu.Append(wx.ID_ABOUT, "&About Style Transfer", " Information about this program")
-      filemenu.AppendSeparator()
-      menuExit = filemenu.Append(wx.ID_EXIT, "E&xit", " Terminate the program")
+class Chen_W(wx.Frame):
+  def __init__(self, parent, title):
+    super(Chen_W, self).__init__(parent, title=title)
+    exit_id = wx.NewId()
+    self.Bind(wx.EVT_MENU, self.onW, id=exit_id)
+    self.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_CTRL, ord('W'), exit_id)]))
+    self.sizer = wx.BoxSizer(wx.VERTICAL)
 
-      # Creating the menubar
-      menuBar = wx.MenuBar()
-      menuBar.Append(filemenu, "&Style Transfer")
-      self.SetMenuBar(menuBar)
+    self.inverse_net = None
+    self.vgg = None
+    self.content = None
+    self.style = None
 
-      # Set events.
-      self.Bind(wx.EVT_MENU, self.onAbout, menuAbout)
-      self.Bind(wx.EVT_MENU, self.onExit, menuExit)
+    self.image_sizer = wx.BoxSizer(wx.HORIZONTAL)
+    # Content image
+    dc = wx.MemoryDC(wx.Bitmap(500, 500))
+    dc.SetFont(wx.Font(16, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+    text = 'Click to choose content image'
+    tw, th = dc.GetTextExtent(text)
+    dc.DrawText(text, (500 - tw) / 2, (500 - th) / 2)
+    dc.DrawLineList(((0, 0, 0, 499), (0, 0, 499, 0), (499, 499, 0, 499), (499, 499, 499, 0)))
+    bm = wx.StaticBitmap(self, bitmap=dc.GetAsBitmap())
+    bm.Bind(wx.EVT_LEFT_UP, self.onContentImage)
+    self.image_sizer.Add(bm, 0, wx.EXPAND)
+    # Style image
+    dc2 = wx.MemoryDC(wx.Bitmap(500, 500))
+    dc2.SetFont(wx.Font(16, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+    text = 'Click to choose style image'
+    tw, th = dc2.GetTextExtent(text)
+    dc2.DrawText(text, (500 - tw) / 2, (500 - th) / 2)
+    dc2.DrawLineList(((0, 0, 0, 499), (0, 0, 499, 0), (499, 499, 0, 499), (499, 499, 499, 0)))
+    bm2 = wx.StaticBitmap(self, bitmap=dc2.GetAsBitmap())
+    bm2.Bind(wx.EVT_LEFT_UP, self.onStyleImage)
+    self.image_sizer.Add(bm2, 0, wx.EXPAND)
+
+    self.sizer.Add(self.image_sizer, 0, wx.EXPAND)
+
+    button = wx.Button(self, label='Stylize', size=((500 - 5) * 2, 40))
+    button.Bind(wx.EVT_BUTTON, self.onStylize)
+    self.sizer.Add(button, 0, wx.CENTER)
+
+    self.SetSizer(self.sizer)
+    self.SetAutoLayout(1)
+    self.sizer.Fit(self)
+
+    self.Center()
+
+  def onStylize(self, e):
+    if self.content is None or self.style is None:
+      wx.MessageBox('Please choose the images to be transferred', 'Sorry', parent=self)
+      return False
+
+    view = wx.Frame(self, title='Stylized image')
+    exit_id = wx.NewId()
+    view.Bind(wx.EVT_MENU, self.onW, id=exit_id)
+    view.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_CTRL, ord('W'), exit_id)]))
+
+    sizer = wx.BoxSizer(wx.VERTICAL)
+
+    self.result = self.stylize()
+
+    sizer.Add(wx.StaticBitmap(view, bitmap=wx.Bitmap(wx.Image(io.BytesIO(self.result)))), 1, wx.EXPAND)
+    save_button = wx.Button(view, label='Save result')
+    save_button.Bind(wx.EVT_BUTTON, self.onSave)
+    sizer.Add(save_button, 0, wx.EXPAND)
+
+    view.SetSizer(sizer)
+    view.SetAutoLayout(1)
+    sizer.Fit(view)
+
+    view.Center()
+    view.Show()
+
+  def stylize(self):
+    content_image = Variable(self.image_loader(self.content).unsqueeze_(0).type(dtype), volatile=True)
+    style_image = Variable(self.image_loader(self.style).unsqueeze_(0).type(dtype), volatile=True)
+
+    if self.inverse_net is None:
+      self.inverse_net = InverseNet()
+      self.inverse_net.load_state_dict(torch.load(os.getcwd() + '/model/inverse_net.model'))
+      if use_cuda:
+        self.inverse_net.cuda()
+    if self.vgg is None:
+      self.vgg = VGG()
+      if use_cuda:
+        self.vgg.cuda()
+
+    content_activation = self.vgg(self.normalize_images(content_image))
+    style_activation = self.vgg(self.normalize_images(style_image))
+    target_activation = self.style_swap(content_activation, style_activation)
+
+    output = self.inverse_net(target_activation)  # target_activation
+    image = io.BytesIO()
+    toPILImage(output.data.squeeze()).save(image, format='JPEG')
+    return image.getvalue()
+
+  def onContentImage(self, e):
+    dirname = os.getcwd() + '/images/content_images'
+    dlg = wx.FileDialog(self, "Choose an image", dirname, "", "*.*", wx.FD_OPEN)
+    if dlg.ShowModal() == wx.ID_OK:
+      filename = dlg.GetFilename()
+      dirname = dlg.GetDirectory()
+      with open(os.path.join(dirname, filename), 'rb') as file:
+        self.content = file.read()
+      e.GetEventObject().SetBitmap(wx.Bitmap(wx.Image(os.path.join(dirname, filename)).Scale(500, 500)))
+    dlg.Destroy()
+
+  def onStyleImage(self, e):
+    dirname = os.getcwd() + '/images/style_images'
+    dlg = wx.FileDialog(self, "Choose an image", dirname, "", "*.*", wx.FD_OPEN)
+    if dlg.ShowModal() == wx.ID_OK:
+      filename = dlg.GetFilename()
+      dirname = dlg.GetDirectory()
+      with open(os.path.join(dirname, filename), 'rb') as file:
+        self.style = file.read()
+      e.GetEventObject().SetBitmap(wx.Bitmap(wx.Image(os.path.join(dirname, filename)).Scale(500, 500)))
+    dlg.Destroy()
+
+  def onSave(self, e):
+    dirname = os.getcwd() + '/images/'
+    dlg = wx.FileDialog(self, defaultDir=dirname, wildcard="*.*", style=wx.FD_SAVE)
+    if dlg.ShowModal() == wx.ID_OK:
+      filename = dlg.GetFilename()
+      if '.jpg' not in filename:
+        filename += '.jpg'
+      dirname = dlg.GetDirectory()
+      with open(os.path.join(dirname, filename), 'wb') as file:
+        file.write(self.result)
+    dlg.Destroy()
+
+  def image_loader(self, image, size=None, transform=None):
+    """ helper for loading images
+    Args:
+      size: the size of the loaded image needed to be resized to, can be a sequence or int
+      transform: the transform that needed to be done on the image
+    Returns:
+      image: the Tensor representing the image loaded (value in [0,1])
+    """
+    image = Image.open(io.BytesIO(image))
+    if transform is not None:
+      image = toTensor(transform(image))
+    elif size is not None:
+      cutImage = transforms.Resize(size)
+      image = toTensor(cutImage(image))
+    else:
+      image = toTensor(image)
+    return image.type(dtype)
+
+  def style_swap(self, content_activation, style_activation):
+    patch_size = 3
+    _, ch_c, h_c, w_c = content_activation.size()
+    _, ch_s, h_s, w_s = style_activation.size()
+    if ch_c != ch_s:
+      print("ERROR: the layer for content activation and style activation should be the same", flush=True)
+      sys.exit(1)
+
+    # Convolutional layer for performing the calculation of cosine measures
+    conv = nn.Conv3d(1, (h_s - int(patch_size / 2) * 2) * (w_s - int(patch_size / 2) * 2),
+                     kernel_size=(ch_s, patch_size, patch_size))
+    for param in conv.parameters():
+      param.requires_grad = False
+    if use_cuda:
+      conv.cuda()
+
+    for h in range(h_s - int(patch_size / 2) * 2):
+      for w in range(w_s - int(patch_size / 2) * 2):
+        conv.weight.data[h * (w_s - int(patch_size / 2) * 2) + w, 0, :, :, :] = nn.functional.normalize(
+          style_activation.data[:, :, h:h + patch_size, w:w + patch_size])
+
+    # Convolution and taking the maximum of cosine mearsures
+    k = conv(content_activation.unsqueeze(0))
+    _, max_index = k.squeeze().max(0)
+
+    # Constructing target activation
+    overlaps = torch.zeros(h_c, w_c).type(dtype)
+    target_activation = Variable(torch.zeros(content_activation.size()).type(dtype), requires_grad=False)
+    for h in range(h_c - int(patch_size / 2) * 2):
+      for w in range(w_c - int(patch_size / 2) * 2):
+        s_w = int(max_index.data[h, w] % (w_s - int(patch_size / 2) * 2))
+        s_h = int((max_index.data[h, w] - s_w) / (w_s - int(patch_size / 2) * 2))
+        target_activation.data[:, :, h:h + patch_size, w:w + patch_size] = \
+          target_activation.data[:, :, h:h + patch_size, w:w + patch_size] + \
+          style_activation.data[:, :, s_h:s_h + patch_size, s_w:s_w + patch_size]
+        overlaps[h:h + patch_size, w:w + patch_size].add_(1)
+    for h in range(h_c):
+      for w in range(w_c):
+        target_activation.data[:, :, h, w] = target_activation.data[:, :, h, w].div(overlaps[h, w])
+
+    return target_activation
+
+  def normalize_images(self, images):
+    """ Normalised a batch of images wrt the Imagenet dataset """
+    # normalize using imagenet mean and std
+    mean = torch.zeros(images.data.size()).type(dtype)
+    std = torch.zeros(images.data.size()).type(dtype)
+    for i in range(3):
+      mean[:, i, :, :] = MEAN_IMAGE[i]
+      std[:, i, :, :] = STD_IMAGE[i]
+    return (images - Variable(mean, requires_grad=False)) / Variable(std, requires_grad=False)
+
+  def onW(self, e):
+    e.GetEventObject().Close()
+
+class MainWindow(wx.Frame):
+  def __init__(self, parent, title):
+    super(MainWindow, self).__init__(parent, title=title)
+    self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    # Use trained styles
+    dc = wx.MemoryDC(wx.Bitmap(360, 360))
+    image = wx.Image(os.getcwd() + '/images/style_images/mandolin_girl.jpg', wx.BITMAP_TYPE_ANY).Scale(360, 360).Blur(4)
+    dc.DrawBitmap(wx.Bitmap(image), 0, 0)
+
+    dc.SetFont(wx.Font(28, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+    text = 'Use trained styles'
+    tw, th = dc.GetTextExtent(text)
+    dc.DrawText(text, (360 - tw) / 2, (360 - th) / 2)
+
+    bm = wx.StaticBitmap(self, bitmap=dc.GetAsBitmap())
+    bm.Bind(wx.EVT_LEFT_UP, self.onTrained)
+    self.sizer.Add(bm, 1, wx.EXPAND)
+
+    # User specify style
+    dc2 = wx.MemoryDC(wx.Bitmap(360, 360))
+    dc2.SetFont(wx.Font(28, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+    text = 'Use your own style'
+    tw, th = dc2.GetTextExtent(text)
+    dc2.DrawText(text, (360 - tw) / 2, (360 - th) / 2)
+    dc2.DrawLineList(((0, 0, 0, 359), (0, 0, 359, 0), (359, 359, 0, 359), (359, 359, 359, 0)))
+    bm2 = wx.StaticBitmap(self, bitmap=dc2.GetAsBitmap())
+    bm2.Bind(wx.EVT_LEFT_UP, self.onCustomising)
+    self.sizer.Add(bm2, 1, wx.EXPAND)
+
+    self.SetSizer(self.sizer)
+    self.SetAutoLayout(1)
+    self.sizer.Fit(self)
+
+    self.makeMenuBar()
+    self.Center()
+
+  def onTrained(self, e):
+    Dumoulin_W(self, 'Trained styles').Show()
+
+  def onCustomising(self, e):
+    Chen_W(self, 'Own style').Show()
+
+  def makeMenuBar(self):
+    # Setting up the menu
+    filemenu = wx.Menu()
+    menuAbout = filemenu.Append(wx.ID_ABOUT, "&About Style Transfer", " Information about this program")
+    filemenu.AppendSeparator()
+    menuExit = filemenu.Append(wx.ID_EXIT, "E&xit", " Terminate the program")
+
+    # Creating the menubar
+    menuBar = wx.MenuBar()
+    menuBar.Append(filemenu, "&Style Transfer")
+    self.SetMenuBar(menuBar)
+
+    # Set events.
+    self.Bind(wx.EVT_MENU, self.onAbout, menuAbout)
+    self.Bind(wx.EVT_MENU, self.onExit, menuExit)
+
+  def onAbout(self, e):
+    dlg = wx.MessageDialog(self, "App for doing style transfers", "About Style Transfer")
+    dlg.ShowModal()
+    dlg.Destroy()
+
+  def onExit(self, e):
+    self.Close()
 
 class TransformerNetwork(nn.Module):
   ''' Module implementing the image transformation network '''
@@ -358,6 +613,53 @@ class InstanceNorm(nn.Module):
       layer.bias.data += self.norms[i].bias.data * weights_of_styles[i]
     return layer(x)
 
+class VGG(nn.Module):
+  """
+    Module based on pre-trained VGG 19 for extracting high level features of image.
+    Use relu3_1 for style-swapping and loss calculation.
+  """
+  def __init__(self):
+    super(VGG, self).__init__()
+    vgg = models.vgg19(pretrained=True).features
+    self.slice = nn.Sequential()
+    for x in range(12):
+      self.slice.add_module(str(x), vgg[x])
+    for param in self.parameters():
+      param.requires_grad = False
+
+  def forward(self, x):
+    return self.slice(x)
+
+
+class InverseNet(nn.Module):
+  """
+    Module for approximating the input of VGG19 given its activation at relu3_1.
+    The inverse is neither injective nor surjective.
+  """
+  def __init__(self):
+    super(InverseNet, self).__init__()
+    self.conv1 = nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1)
+    self.in1 = nn.InstanceNorm2d(128, affine=True)
+    self.conv2 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
+    self.in2 = nn.InstanceNorm2d(128, affine=True)
+    self.conv3 = nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1)
+    self.in3 = nn.InstanceNorm2d(64, affine=True)
+    self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
+    self.in4 = nn.InstanceNorm2d(64, affine=True)
+    self.conv5 = nn.Conv2d(64, 3, kernel_size=3, stride=1, padding=1)
+
+    self.relu = nn.ReLU()
+    self.up = nn.Upsample(scale_factor=2)
+
+  def forward(self, x):
+    x = self.relu(self.in1(self.conv1(x)))
+    x = self.up(x)
+    x = self.relu(self.in2(self.conv2(x)))
+    x = self.relu(self.in3(self.conv3(x)))
+    x = self.up(x)
+    x = self.relu(self.in4(self.conv4(x)))
+    x = self.conv5(x)
+    return x
 
 if __name__ == '__main__':
   app = wx.App()
