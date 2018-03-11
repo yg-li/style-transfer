@@ -4,6 +4,7 @@ import argparse
 import time
 import logging
 import math
+import warnings
 
 from PIL import Image
 from PIL import ImageFile
@@ -20,6 +21,7 @@ import torchvision.utils as utils
 import torchvision.datasets as datasets
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+warnings.simplefilter('ignore', Image.DecompressionBombWarning)
 
 # run on GPU
 use_cuda = torch.cuda.is_available()
@@ -78,15 +80,15 @@ def normalize_images(images):
   return (images - Variable(mean, requires_grad=False)) / Variable(std, requires_grad=False)
 
 
-def denormalize_image(image):
-  """ Denormalised a batch of images wrt the Imagenet dataset """
-  # denormalize using imagenet mean and std
-  mean = torch.zeros(image.size()).type(dtype)
-  std = torch.zeros(image.size()).type(dtype)
-  for i in range(3):
-    mean[i, :, :] = MEAN_IMAGE[i]
-    std[i, :, :] = STD_IMAGE[i]
-  return (image * std) + mean
+# def denormalize_image(image):
+#   """ Denormalised a batch of images wrt the Imagenet dataset """
+#   # denormalize using imagenet mean and std
+#   mean = torch.zeros(image.size()).type(dtype)
+#   std = torch.zeros(image.size()).type(dtype)
+#   for i in range(3):
+#     mean[i, :, :] = MEAN_IMAGE[i]
+#     std[i, :, :] = STD_IMAGE[i]
+#   return (image * std) + mean
 
 
 class VGG(nn.Module):
@@ -115,13 +117,13 @@ class InverseNet(nn.Module):
   def __init__(self):
     super(InverseNet, self).__init__()
     self.conv1 = nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1)
-    self.in1 = nn.InstanceNorm2d(128)
+    self.in1 = nn.InstanceNorm2d(128, affine=True)
     self.conv2 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
-    self.in2 = nn.InstanceNorm2d(128)
+    self.in2 = nn.InstanceNorm2d(128, affine=True)
     self.conv3 = nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1)
-    self.in3 = nn.InstanceNorm2d(64)
+    self.in3 = nn.InstanceNorm2d(64, affine=True)
     self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
-    self.in4 = nn.InstanceNorm2d(64)
+    self.in4 = nn.InstanceNorm2d(64, affine=True)
     self.conv5 = nn.Conv2d(64, 3, kernel_size=3, stride=1, padding=1)
 
     self.relu = nn.ReLU()
@@ -270,13 +272,12 @@ def train():
       output = inverse_net(target_activations)
 
       if (batch_id + 1) % args.log_interval == 0:
-        utils.save_image(denormalize_image(output.data[0]),
-                         args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_output.jpg')
+        utils.save_image(output.data[0], args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_output.jpg')
 
       tv_loss = TV_WEIGHT * (torch.sum(torch.abs(output[:, :, :, :-1]-output[:, :, :, 1:])) +
                              torch.sum(torch.abs(output[:, :, :-1, :]-output[:, :, 1:, :])))
 
-      output_activations = vgg(output)
+      output_activations = vgg(normalize_images(output))
       activation_loss = mse_loss(output_activations, target_activations)
 
       # print('{}\tBatch {}\tac_loss {}\ttv_loss {}'.format(
@@ -333,10 +334,10 @@ def stylize():
 
   content_activation = vgg(normalize_images(content_image))
   style_activation = vgg(normalize_images(style_image))
-  # target_activation = style_swap(content_activation, style_activation)
+  target_activation = style_swap(content_activation, style_activation)
 
-  output = inverse_net(content_activation) #target_activation)
-  utils.save_image(denormalize_image(output.data[0]), args.output_image)
+  output = inverse_net(target_activation) #target_activation)
+  utils.save_image(output.data[0], args.output_image)
   print('Done stylization to', args.output_image, '\n', flush=True)
 
 
