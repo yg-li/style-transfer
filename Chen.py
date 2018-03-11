@@ -389,7 +389,7 @@ if __name__ == '__main__':
                             help='learning rate, default is 1e-3')
   train_parser.add_argument('--log-interval', type=int, default=500,
                             help='number of images after which the training loss is logged, default is 500')
-  train_parser.add_argument('--checkpoint-interval', type=int, default=2000,
+  train_parser.add_argument('--checkpoint-interval', type=int, default=500,
                             help='number of batches after which a checkpoint of the trained model will be created')
 
   eval_parser = subparsers.add_parser('eval', help='parser for stylizing arguments')
