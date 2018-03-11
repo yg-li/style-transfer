@@ -336,7 +336,7 @@ def stylize():
   style_activation = vgg(normalize_images(style_image))
   target_activation = style_swap(content_activation, style_activation)
 
-  output = inverse_net(target_activation) #target_activation)
+  output = inverse_net(target_activation) #target_activation
   utils.save_image(output.data[0], args.output_image)
   print('Done stylization to', args.output_image, '\n', flush=True)
 
@@ -345,14 +345,14 @@ def main():
   if args.subcommand is None:
     print('ERROR: specify either train or eval', flush=True)
     sys.exit(1)
-  # elif args.patch_size % 2 == 0:
-  #   print('ERROR: the patch size must be odd', flush=True)
-  #   sys.exit(1)
-  # elif math.sqrt(args.batch_size) != int(math.sqrt(args.batch_size)):
-  #   print('ERROR: the batch size must be perfect square', flush=True)
-  #   sys.exit(1)
+  if args.patch_size % 2 == 0:
+    print('ERROR: the patch size must be odd', flush=True)
+    sys.exit(1)
 
   if args.subcommand == 'train':
+    if math.sqrt(args.batch_size) != int(math.sqrt(args.batch_size)):
+      print('ERROR: the batch size must be perfect square', flush=True)
+      sys.exit(1)
     check_paths()
     if 'inverse_net.model' in os.listdir(args.save_model_dir):
       print('Already trained the inverse net\n', flush=True)
