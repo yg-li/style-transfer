@@ -80,15 +80,15 @@ def normalize_images(images):
   return (images - Variable(mean, requires_grad=False)) / Variable(std, requires_grad=False)
 
 
-# def denormalize_image(image):
-#   """ Denormalised a batch of images wrt the Imagenet dataset """
-#   # denormalize using imagenet mean and std
-#   mean = torch.zeros(image.size()).type(dtype)
-#   std = torch.zeros(image.size()).type(dtype)
-#   for i in range(3):
-#     mean[i, :, :] = MEAN_IMAGE[i]
-#     std[i, :, :] = STD_IMAGE[i]
-#   return (image * std) + mean
+def denormalize_image(image):
+  """ Denormalised the image wrt the Imagenet dataset """
+  # denormalize using imagenet mean and std
+  mean = torch.zeros(image.size()).type(dtype)
+  std = torch.zeros(image.size()).type(dtype)
+  for i in range(3):
+    mean[i, :, :] = MEAN_IMAGE[i]
+    std[i, :, :] = STD_IMAGE[i]
+  return (image * std) + mean
 
 
 class VGG(nn.Module):
@@ -158,7 +158,8 @@ def style_swap(content_activation, style_activation):
   for h in range(h_s - int(args.patch_size / 2) * 2):
     for w in range(w_s - int(args.patch_size / 2) * 2):
       conv.weight.data[h * (w_s - int(args.patch_size / 2) * 2) + w, 0, :, :, :] = nn.functional.normalize(
-        style_activation.data[:, :, h:h + args.patch_size, w:w + args.patch_size])
+        style_activation.data[:, :, h:h + args.patch_size, w:w + args.patch_size].squeeze())
+  conv.bias.data.mul_(0)
 
   # Convolution and taking the maximum of cosine mearsures
   k = conv(content_activation.unsqueeze(0))
@@ -166,20 +167,17 @@ def style_swap(content_activation, style_activation):
 
   # Constructing target activation
   overlaps = torch.zeros(h_c, w_c).type(dtype)
-  target_activation = Variable(torch.zeros(content_activation.size()).type(dtype), requires_grad=False)
+  target_activation = torch.zeros(content_activation.size()).type(dtype)
   for h in range(h_c - int(args.patch_size / 2) * 2):
     for w in range(w_c - int(args.patch_size / 2) * 2):
       s_w = int(max_index.data[h, w] % (w_s - int(args.patch_size / 2) * 2))
-      s_h = int((max_index.data[h, w] - s_w) / (w_s - int(args.patch_size / 2) * 2))
-      target_activation.data[:, :, h:h + args.patch_size, w:w + args.patch_size] = \
-        target_activation.data[:, :, h:h + args.patch_size, w:w + args.patch_size] + \
+      s_h = int(max_index.data[h, w] // (w_s - int(args.patch_size / 2) * 2))
+      target_activation[:, :, h:h + args.patch_size, w:w + args.patch_size] = \
+        target_activation[:, :, h:h + args.patch_size, w:w + args.patch_size] + \
         style_activation.data[:, :, s_h:s_h + args.patch_size, s_w:s_w + args.patch_size]
       overlaps[h:h + args.patch_size, w:w + args.patch_size].add_(1)
-  for h in range(h_c):
-    for w in range(w_c):
-      target_activation.data[:, :, h, w] = target_activation.data[:, :, h, w].div(overlaps[h, w])
 
-  return target_activation
+  return target_activation.div(overlaps)
 
 
 def train():
@@ -222,8 +220,6 @@ def train():
     if e_has != 0 or batch_has != 0:
       inverse_net.load_state_dict(torch.load(args.checkpoint_dir + '/' + str(e_has) + '_' + str(batch_has) + '.pth'))
 
-  optimizer = Adam(inverse_net.parameters(), args.lr)
-  mse_loss = nn.MSELoss()
   vgg = VGG()
 
   if torch.cuda.device_count() > 1:
@@ -233,6 +229,9 @@ def train():
   if use_cuda:
     inverse_net.cuda()
     vgg.cuda()
+
+  optimizer = Adam(inverse_net.parameters(), args.lr)
+  mse_loss = nn.MSELoss()
 
   # Training epoches
   for e in range(args.epochs):
@@ -267,18 +266,19 @@ def train():
       for i in range(int(math.sqrt(args.batch_size))):
         for j in range(int(math.sqrt(args.batch_size))):
           # Unsqueeze here since the indexing would remove the first dimention from Variables
-          target_activations[i * int(math.sqrt(args.batch_size)) + j] = style_swap(c_activations[i].unsqueeze(0),
+          target_activations.data[i * int(math.sqrt(args.batch_size)) + j] = style_swap(c_activations[i].unsqueeze(0),
                                                                                    s_activations[j].unsqueeze(0))
 
       output = inverse_net(target_activations)
 
       if (batch_id + 1) % args.log_interval == 0:
-        utils.save_image(output.data[0], args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_output.jpg')
+        utils.save_image(denormalize_image(output.data[0]),
+                         args.checkpoint_dir + '/' + str(e) + '_' + str(batch_id + 1) + '_output.jpg')
 
       tv_loss = TV_WEIGHT * (torch.sum(torch.abs(output[:, :, :, :-1]-output[:, :, :, 1:])) +
                              torch.sum(torch.abs(output[:, :, :-1, :]-output[:, :, 1:, :])))
 
-      output_activations = vgg(normalize_images(output))
+      output_activations = vgg(output)
       activation_loss = mse_loss(output_activations, target_activations)
 
       # print('{}\tBatch {}\tac_loss {}\ttv_loss {}'.format(
@@ -335,10 +335,10 @@ def stylize():
 
   content_activation = vgg(normalize_images(content_image))
   style_activation = vgg(normalize_images(style_image))
-  target_activation = style_swap(content_activation, style_activation)
+  target_activation = Variable(style_swap(content_activation, style_activation), volatile=True)
 
   output = inverse_net(target_activation) #target_activation
-  utils.save_image(output.data[0], args.output_image)
+  utils.save_image(denormalize_image(output.data[0]), args.output_image)
   print('Done stylization to', args.output_image, '\n', flush=True)
 
 
@@ -408,3 +408,46 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   main()
+
+# class InverseNet(nn.Module):
+#   """
+#     Module for approximating the input of VGG19 given its activation at relu3_1.
+#     The inverse is neither injective nor surjective.
+#   """
+#   def __init__(self):
+#     super(InverseNet, self).__init__()
+#     self.conv1 = nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1)
+#     self.in1 = nn.InstanceNorm2d(128, affine=True)
+#     self.conv2 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
+#     self.in2 = nn.InstanceNorm2d(128, affine=True)
+#     self.conv3 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
+#     self.in3 = nn.InstanceNorm2d(128, affine=True)
+#     self.conv4 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
+#     self.in4 = nn.InstanceNorm2d(128, affine=True)
+#     self.conv5 = nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1)
+#     self.in5 = nn.InstanceNorm2d(64, affine=True)
+#     self.conv6 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
+#     self.in6 = nn.InstanceNorm2d(64, affine=True)
+#     self.conv7 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
+#     self.in7 = nn.InstanceNorm2d(64, affine=True)
+#     self.conv8 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
+#     self.in8 = nn.InstanceNorm2d(64, affine=True)
+#     self.conv9 = nn.Conv2d(64, 3, kernel_size=3, stride=1, padding=1)
+#
+#     self.relu = nn.ReLU()
+#     self.tanh = nn.Tanh()
+#     self.up = nn.Upsample(scale_factor=2)
+#
+#   def forward(self, x):
+#     x = self.relu(self.in1(self.conv1(x)))
+#     x = self.relu(self.in2(self.conv2(x)))
+#     x = self.up(x)
+#     x = self.relu(self.in3(self.conv3(x)))
+#     x = self.relu(self.in4(self.conv4(x)))
+#     x = self.relu(self.in5(self.conv5(x)))
+#     x = self.relu(self.in6(self.conv6(x)))
+#     x = self.up(x)
+#     x = self.relu(self.in7(self.conv7(x)))
+#     x = self.relu(self.in8(self.conv8(x)))
+#     x = self.tanh(self.conv9(x))
+#     return x.add(1).div(2)
