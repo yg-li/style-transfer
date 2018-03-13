@@ -339,11 +339,11 @@ class Chen_W(wx.Frame):
 
     content_activation = self.vgg(self.normalize_images(content_image))
     style_activation = self.vgg(self.normalize_images(style_image))
-    target_activation = self.style_swap(content_activation, style_activation)
+    target_activation = Variable(self.style_swap(content_activation, style_activation), volatile=True)
 
     output = self.inverse_net(target_activation)  # target_activation
     image = io.BytesIO()
-    toPILImage(output.data.squeeze()).save(image, format='JPEG')
+    toPILImage(self.denormalize_image(output.data.squeeze())).save(image, format='JPEG')
     return image.getvalue()
 
   def onContentImage(self, e):
@@ -398,7 +398,7 @@ class Chen_W(wx.Frame):
       image = toTensor(image)
     return image.type(dtype)
 
-  def style_swap(self, content_activation, style_activation):
+  def style_swap(content_activation, style_activation):
     patch_size = 3
     _, ch_c, h_c, w_c = content_activation.size()
     _, ch_s, h_s, w_s = style_activation.size()
@@ -417,7 +417,8 @@ class Chen_W(wx.Frame):
     for h in range(h_s - int(patch_size / 2) * 2):
       for w in range(w_s - int(patch_size / 2) * 2):
         conv.weight.data[h * (w_s - int(patch_size / 2) * 2) + w, 0, :, :, :] = nn.functional.normalize(
-          style_activation.data[:, :, h:h + patch_size, w:w + patch_size])
+          style_activation.data[:, :, h:h + patch_size, w:w + patch_size].squeeze())
+    conv.bias.data.mul_(0)
 
     # Convolution and taking the maximum of cosine mearsures
     k = conv(content_activation.unsqueeze(0))
@@ -425,20 +426,17 @@ class Chen_W(wx.Frame):
 
     # Constructing target activation
     overlaps = torch.zeros(h_c, w_c).type(dtype)
-    target_activation = Variable(torch.zeros(content_activation.size()).type(dtype), requires_grad=False)
+    target_activation = torch.zeros(content_activation.size()).type(dtype)
     for h in range(h_c - int(patch_size / 2) * 2):
       for w in range(w_c - int(patch_size / 2) * 2):
         s_w = int(max_index.data[h, w] % (w_s - int(patch_size / 2) * 2))
-        s_h = int((max_index.data[h, w] - s_w) / (w_s - int(patch_size / 2) * 2))
-        target_activation.data[:, :, h:h + patch_size, w:w + patch_size] = \
-          target_activation.data[:, :, h:h + patch_size, w:w + patch_size] + \
+        s_h = int(max_index.data[h, w] // (w_s - int(patch_size / 2) * 2))
+        target_activation[:, :, h:h + patch_size, w:w + patch_size] = \
+          target_activation[:, :, h:h + patch_size, w:w + patch_size] + \
           style_activation.data[:, :, s_h:s_h + patch_size, s_w:s_w + patch_size]
         overlaps[h:h + patch_size, w:w + patch_size].add_(1)
-    for h in range(h_c):
-      for w in range(w_c):
-        target_activation.data[:, :, h, w] = target_activation.data[:, :, h, w].div(overlaps[h, w])
 
-    return target_activation
+    return target_activation.div(overlaps)
 
   def normalize_images(self, images):
     """ Normalised a batch of images wrt the Imagenet dataset """
@@ -449,6 +447,16 @@ class Chen_W(wx.Frame):
       mean[:, i, :, :] = MEAN_IMAGE[i]
       std[:, i, :, :] = STD_IMAGE[i]
     return (images - Variable(mean, requires_grad=False)) / Variable(std, requires_grad=False)
+
+  def denormalize_image(self, image):
+    """ Denormalised the image wrt the Imagenet dataset """
+    # denormalize using imagenet mean and std
+    mean = torch.zeros(image.size()).type(dtype)
+    std = torch.zeros(image.size()).type(dtype)
+    for i in range(3):
+      mean[i, :, :] = MEAN_IMAGE[i]
+      std[i, :, :] = STD_IMAGE[i]
+    return (image * std) + mean
 
   def onW(self, e):
     e.GetEventObject().Close()
