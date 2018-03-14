@@ -343,7 +343,7 @@ class Chen_W(wx.Frame):
 
     output = self.inverse_net(target_activation)  # target_activation
     image = io.BytesIO()
-    toPILImage(self.denormalize_image(output.data.squeeze())).save(image, format='JPEG')
+    toPILImage(output.data.squeeze()).save(image, format='JPEG')
     return image.getvalue()
 
   def onContentImage(self, e):
@@ -398,7 +398,7 @@ class Chen_W(wx.Frame):
       image = toTensor(image)
     return image.type(dtype)
 
-  def style_swap(content_activation, style_activation):
+  def style_swap(self, content_activation, style_activation):
     patch_size = 3
     _, ch_c, h_c, w_c = content_activation.size()
     _, ch_s, h_s, w_s = style_activation.size()
@@ -447,16 +447,6 @@ class Chen_W(wx.Frame):
       mean[:, i, :, :] = MEAN_IMAGE[i]
       std[:, i, :, :] = STD_IMAGE[i]
     return (images - Variable(mean, requires_grad=False)) / Variable(std, requires_grad=False)
-
-  def denormalize_image(self, image):
-    """ Denormalised the image wrt the Imagenet dataset """
-    # denormalize using imagenet mean and std
-    mean = torch.zeros(image.size()).type(dtype)
-    std = torch.zeros(image.size()).type(dtype)
-    for i in range(3):
-      mean[i, :, :] = MEAN_IMAGE[i]
-      std[i, :, :] = STD_IMAGE[i]
-    return (image * std) + mean
 
   def onW(self, e):
     e.GetEventObject().Close()
@@ -650,24 +640,37 @@ class InverseNet(nn.Module):
     self.in1 = nn.InstanceNorm2d(128, affine=True)
     self.conv2 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
     self.in2 = nn.InstanceNorm2d(128, affine=True)
-    self.conv3 = nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1)
-    self.in3 = nn.InstanceNorm2d(64, affine=True)
-    self.conv4 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
-    self.in4 = nn.InstanceNorm2d(64, affine=True)
-    self.conv5 = nn.Conv2d(64, 3, kernel_size=3, stride=1, padding=1)
+    self.conv3 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
+    self.in3 = nn.InstanceNorm2d(128, affine=True)
+    self.conv4 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
+    self.in4 = nn.InstanceNorm2d(128, affine=True)
+    self.conv5 = nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1)
+    self.in5 = nn.InstanceNorm2d(64, affine=True)
+    self.conv6 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
+    self.in6 = nn.InstanceNorm2d(64, affine=True)
+    self.conv7 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
+    self.in7 = nn.InstanceNorm2d(64, affine=True)
+    self.conv8 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
+    self.in8 = nn.InstanceNorm2d(64, affine=True)
+    self.conv9 = nn.Conv2d(64, 3, kernel_size=3, stride=1, padding=1)
 
     self.relu = nn.ReLU()
+    self.tanh = nn.Tanh()
     self.up = nn.Upsample(scale_factor=2)
 
   def forward(self, x):
     x = self.relu(self.in1(self.conv1(x)))
-    x = self.up(x)
     x = self.relu(self.in2(self.conv2(x)))
-    x = self.relu(self.in3(self.conv3(x)))
     x = self.up(x)
+    x = self.relu(self.in3(self.conv3(x)))
     x = self.relu(self.in4(self.conv4(x)))
-    x = self.conv5(x)
-    return x
+    x = self.relu(self.in5(self.conv5(x)))
+    x = self.relu(self.in6(self.conv6(x)))
+    x = self.up(x)
+    x = self.relu(self.in7(self.conv7(x)))
+    x = self.relu(self.in8(self.conv8(x)))
+    x = self.tanh(self.conv9(x))
+    return x.add(1).div(2)
 
 if __name__ == '__main__':
   app = wx.App()

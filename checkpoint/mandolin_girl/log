@@ -1,4 +1,3 @@
-INFO:root:Content weight: 10 Style weight: 500
 INFO:root:Content weight: 10 Style weight: 250
 INFO:root:Sat Dec  2 15:38:34 2017	Epoch 1:	[2000/82783]	content: 151.140633	style: 1583.897060	total: 1735.037693	batch: 500
 INFO:root:Sat Dec  2 15:45:01 2017	Epoch 1:	[4000/82783]	content: 161.515299	style: 454.011028	total: 615.526327	batch: 1000

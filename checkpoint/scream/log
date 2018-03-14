@@ -48,7 +48,6 @@ INFO:root:Sun Dec  3 05:25:41 2017	Epoch 2:	[10000/82783]	content: 113.866463	st
 INFO:root:Sun Dec  3 05:32:07 2017	Epoch 2:	[12000/82783]	content: 114.473428	style: 48.757170	total: 163.230598	batch: 3000
 INFO:root:Sun Dec  3 05:38:34 2017	Epoch 2:	[14000/82783]	content: 114.419931	style: 48.386223	total: 162.806154	batch: 3500
 INFO:root:Sun Dec  3 05:45:01 2017	Epoch 2:	[16000/82783]	content: 114.867841	style: 49.960294	total: 164.828136	batch: 4000
-INFO:root:Content weight: 10 Style weight: 250
 INFO:root:Sun Dec  3 11:00:45 2017	Epoch 2:	[18000/82783]	content: 115.062040	style: 49.046947	total: 164.108988	batch: 4500
 INFO:root:Sun Dec  3 11:07:08 2017	Epoch 2:	[20000/82783]	content: 112.904329	style: 48.511118	total: 161.415448	batch: 5000
 INFO:root:Sun Dec  3 11:13:32 2017	Epoch 2:	[22000/82783]	content: 114.373359	style: 48.231474	total: 162.604832	batch: 5500

@@ -1,14 +1,4 @@
 INFO:root:Content weight: 10 Style weight: 250
-INFO:root:Content weight: 10 Style weight: 250
-INFO:root:Wed Feb  7 15:32:30 2018	Epoch 1:	[2000/82783]	content: 172.268512	style: 1024.115166	total: 1196.383678	batch: 500
-INFO:root:Wed Feb  7 15:43:14 2018	Epoch 1:	[4000/82783]	content: 186.410306	style: 448.556037	total: 634.966344	batch: 1000
-INFO:root:Wed Feb  7 15:53:29 2018	Epoch 1:	[6000/82783]	content: 187.885530	style: 347.943194	total: 535.828724	batch: 1500
-INFO:root:Content weight: 10 Style weight: 250
-INFO:root:Wed Feb  7 19:51:13 2018	Epoch 1:	[2000/82783]	content: 180.387205	style: 828.480144	total: 1008.867349	batch: 500
-INFO:root:Content weight: 10 Style weight: 250
-INFO:root:Content weight: 10 Style weight: 250
-INFO:root:Content weight: 10 Style weight: 250
-INFO:root:Content weight: 10 Style weight: 250
 INFO:root:Wed Feb  7 20:09:48 2018	Epoch 1:	[2000/82783]	content: 175.776380	style: 964.699439	total: 1140.475819	batch: 500
 INFO:root:Wed Feb  7 20:16:14 2018	Epoch 1:	[4000/82783]	content: 191.379007	style: 334.869489	total: 526.248497	batch: 1000
 INFO:root:Wed Feb  7 20:22:39 2018	Epoch 1:	[6000/82783]	content: 191.177006	style: 232.411579	total: 423.588585	batch: 1500
@@ -21,10 +11,6 @@ INFO:root:Wed Feb  7 21:15:08 2018	Epoch 1:	[18000/82783]	content: 181.018809	st
 INFO:root:Wed Feb  7 21:23:16 2018	Epoch 1:	[20000/82783]	content: 177.051299	style: 118.722563	total: 295.773862	batch: 5000
 INFO:root:Wed Feb  7 21:31:14 2018	Epoch 1:	[22000/82783]	content: 178.375962	style: 113.617387	total: 291.993349	batch: 5500
 INFO:root:Wed Feb  7 21:39:05 2018	Epoch 1:	[24000/82783]	content: 176.776180	style: 112.081729	total: 288.857910	batch: 6000
-INFO:root:Wed Feb  7 21:46:45 2018	Epoch 1:	[26000/82783]	content: 173.850254	style: 108.897941	total: 282.748195	batch: 6500
-INFO:root:Wed Feb  7 21:54:13 2018	Epoch 1:	[28000/82783]	content: 172.852315	style: 106.328210	total: 279.180525	batch: 7000
-INFO:root:Wed Feb  7 22:01:45 2018	Epoch 1:	[30000/82783]	content: 170.330027	style: 103.953805	total: 274.283832	batch: 7500
-INFO:root:Content weight: 10 Style weight: 250
 INFO:root:Wed Feb  7 22:21:53 2018	Epoch 1:	[26000/82783]	content: 174.163411	style: 116.774568	total: 290.937979	batch: 6500
 INFO:root:Wed Feb  7 22:28:18 2018	Epoch 1:	[28000/82783]	content: 173.543500	style: 109.756450	total: 283.299950	batch: 7000
 INFO:root:Wed Feb  7 22:34:44 2018	Epoch 1:	[30000/82783]	content: 170.970264	style: 105.013609	total: 275.983873	batch: 7500

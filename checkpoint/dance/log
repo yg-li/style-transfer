@@ -7,9 +7,6 @@ INFO:root:Mon Dec  4 11:49:59 2017	Epoch 1:	[10000/82783]	content: 231.180316	st
 INFO:root:Mon Dec  4 11:56:19 2017	Epoch 1:	[12000/82783]	content: 227.959446	style: 157.891058	total: 385.850504	batch: 3000
 INFO:root:Mon Dec  4 12:02:41 2017	Epoch 1:	[14000/82783]	content: 225.033331	style: 146.823823	total: 371.857154	batch: 3500
 INFO:root:Mon Dec  4 12:09:04 2017	Epoch 1:	[16000/82783]	content: 220.316473	style: 271.471007	total: 491.787479	batch: 4000
-INFO:root:Mon Dec  4 12:15:27 2017	Epoch 1:	[18000/82783]	content: 223.583413	style: 263.852691	total: 487.436103	batch: 4500
-INFO:root:Mon Dec  4 12:21:50 2017	Epoch 1:	[20000/82783]	content: 220.533482	style: 428.437905	total: 648.971387	batch: 5000
-INFO:root:Content weight: 10 Style weight: 250
 INFO:root:Mon Dec  4 14:01:36 2017	Epoch 1:	[18000/82783]	content: 224.609886	style: 268.132715	total: 492.742602	batch: 4500
 INFO:root:Mon Dec  4 14:07:58 2017	Epoch 1:	[20000/82783]	content: 220.086411	style: 146.790309	total: 366.876720	batch: 5000
 INFO:root:Mon Dec  4 14:14:21 2017	Epoch 1:	[22000/82783]	content: 219.120478	style: 136.199777	total: 355.320254	batch: 5500
@@ -30,7 +27,6 @@ INFO:root:Mon Dec  4 15:43:41 2017	Epoch 1:	[50000/82783]	content: 203.498689	st
 INFO:root:Mon Dec  4 15:50:03 2017	Epoch 1:	[52000/82783]	content: 198.814264	style: 118.532357	total: 317.346621	batch: 13000
 INFO:root:Mon Dec  4 15:56:26 2017	Epoch 1:	[54000/82783]	content: 195.728527	style: 116.872739	total: 312.601266	batch: 13500
 INFO:root:Mon Dec  4 16:02:49 2017	Epoch 1:	[56000/82783]	content: 193.165825	style: 115.593032	total: 308.758857	batch: 14000
-INFO:root:Content weight: 10 Style weight: 250
 INFO:root:Mon Dec  4 19:42:41 2017	Epoch 1:	[58000/82783]	content: 192.335231	style: 118.366706	total: 310.701937	batch: 14500
 INFO:root:Mon Dec  4 19:48:56 2017	Epoch 1:	[60000/82783]	content: 190.953132	style: 114.921462	total: 305.874594	batch: 15000
 INFO:root:Mon Dec  4 19:55:11 2017	Epoch 1:	[62000/82783]	content: 187.811450	style: 113.402396	total: 301.213846	batch: 15500
